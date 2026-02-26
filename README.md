@@ -1,6 +1,6 @@
-# TradingSandbox2
+# DataMiningProject
 
-Sandbox for **algorithmic trading strategies**: shared libraries for data and experiments, with tests and tooling.
+Project for **data mining**: shared libraries and experiments for finding a **profitable trading strategy**, with tests and tooling.
 
 ---
 
