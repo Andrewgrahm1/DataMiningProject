@@ -197,6 +197,41 @@ class TestStockDataCleaner(unittest.TestCase):
         self.assertEqual(mid['close'], 100.0)
         self.assertEqual(mid['volume'], 0)
 
+    def test_forward_propagate_mark_imputed_rows_adds_imputed_column(self):
+        """Test forward_propagate with mark_imputed_rows=True adds 'imputed' column."""
+        data = self._create_stock_dataframe(
+            symbols=['AAPL', 'AAPL'],
+            timestamps=pd.to_datetime(
+                ['2024-01-02 14:30:00', '2024-01-02 14:32:00'],
+                utc=True
+            ),
+            close=[100.0, 102.0],
+        )
+        result = self.cleaner.forward_propagate(
+            data, TimeFrame.Minute, only_when_market_open=False, mark_imputed_rows=True
+        )
+        self.assertIn('imputed', result.columns)
+        ts_14_30 = pd.Timestamp('2024-01-02 14:30:00', tz='UTC')
+        ts_14_31 = pd.Timestamp('2024-01-02 14:31:00', tz='UTC')
+        ts_14_32 = pd.Timestamp('2024-01-02 14:32:00', tz='UTC')
+        self.assertFalse(result.loc[('AAPL', ts_14_30), 'imputed'])
+        self.assertTrue(result.loc[('AAPL', ts_14_31), 'imputed'])
+        self.assertFalse(result.loc[('AAPL', ts_14_32), 'imputed'])
+
+    def test_forward_propagate_mark_imputed_rows_false_no_imputed_column(self):
+        """Test forward_propagate with mark_imputed_rows=False does not add 'imputed' column."""
+        data = self._create_stock_dataframe(
+            symbols=['AAPL', 'AAPL'],
+            timestamps=pd.to_datetime(
+                ['2024-01-02 14:30:00', '2024-01-02 14:32:00'],
+                utc=True
+            ),
+        )
+        result = self.cleaner.forward_propagate(
+            data, TimeFrame.Minute, only_when_market_open=False, mark_imputed_rows=False
+        )
+        self.assertNotIn('imputed', result.columns)
+
 
 if __name__ == '__main__':
     unittest.main()

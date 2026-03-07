@@ -100,6 +100,7 @@ class StockDataCleaner:
         timeframe: TimeFrame,
         *,
         only_when_market_open: bool = False,
+        mark_imputed_rows: bool = False,
     ) -> pd.DataFrame:
         """
         Forward-propagate price data by filling missing bars with the previous bar's values.
@@ -116,11 +117,14 @@ class StockDataCleaner:
             only_when_market_open: If True, only impute bars that fall during NYSE
                                   regular trading hours. If False, impute every
                                   timeframe step from min to max timestamp.
+            mark_imputed_rows: If True, add an "imputed" column: True for rows that
+                              were filled by propagation, False for original rows.
 
         Returns:
             New DataFrame with the same columns and a complete index (no missing bars
             in the expected sequence). Price columns are forward-filled; volume and
-            trade_count are 0 where bars were inserted.
+            trade_count are 0 where bars were inserted. If mark_imputed_rows is True,
+            includes an "imputed" boolean column.
         """
         if data.empty:
             return data.copy()
@@ -151,6 +155,9 @@ class StockDataCleaner:
                 start_ts, end_ts, timeframe, only_when_market_open
             )
             if expected_ts.empty:
+                if mark_imputed_rows:
+                    sym_df = sym_df.copy()
+                    sym_df['imputed'] = False
                 pieces.append(sym_df)
                 continue
 
@@ -162,6 +169,8 @@ class StockDataCleaner:
             inserted = reindexed['close'].isna()
             reindexed = reindexed.ffill().bfill()
             reindexed.loc[inserted, ['volume', 'trade_count']] = 0
+            if mark_imputed_rows:
+                reindexed['imputed'] = inserted
             pieces.append(reindexed)
 
         return pd.concat(pieces, axis=0)
