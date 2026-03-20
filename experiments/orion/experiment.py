@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier  # type: ignore[import-untyped]
 from sklearn.naive_bayes import GaussianNB  # type: ignore[import-untyped]
 from sklearn.neighbors import KNeighborsClassifier  # type: ignore[import-untyped]
+from sklearn.preprocessing import StandardScaler  # type: ignore[import-untyped]
 from sklearn.tree import DecisionTreeClassifier  # type: ignore[import-untyped]
 from xgboost import XGBClassifier  # type: ignore[import-untyped]
 
@@ -100,6 +101,21 @@ def split_training_data(
     train_df = data.iloc[: -test_size]
     test_df = data.iloc[-test_size:]
     return train_df, test_df
+
+
+def zscore_feature_columns(
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    target_column: str = "target",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Fit z-score (StandardScaler) on train features only; transform train and test."""
+    feature_cols = [c for c in train_df.columns if c != target_column]
+    scaler = StandardScaler()
+    train_out = train_df.copy()
+    test_out = test_df.copy()
+    train_out[feature_cols] = scaler.fit_transform(train_df[feature_cols])
+    test_out[feature_cols] = scaler.transform(test_df[feature_cols])
+    return train_out, test_out
 
 
 def train_model(
@@ -221,6 +237,7 @@ if __name__ == "__main__":
     raw_df = pull_and_clean(SYMBOL, START_DATE, END_DATE)
     training_df = create_training_data(raw_df, take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS)
     train_df, test_df = split_training_data(training_df, test_fraction=0.2)
+    train_df, test_df = zscore_feature_columns(train_df, test_df)
     print(f"Train rows: {len(train_df):,}, test rows: {len(test_df):,}")
 
     X_train = train_df.drop(columns=["target"])
