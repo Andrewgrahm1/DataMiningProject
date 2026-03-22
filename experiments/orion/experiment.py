@@ -298,7 +298,7 @@ if __name__ == "__main__":
             "p": [1, 2],
         },
         verbose=True,
-        grid_n_jobs=6,
+        grid_n_jobs=4,
     )
     knn_pred = knn_clf.predict(X_test)
     evaluate_and_print(
@@ -316,7 +316,7 @@ if __name__ == "__main__":
             "min_samples_leaf": [100, 500],
         },
         verbose=True,
-        grid_n_jobs=6,
+        grid_n_jobs=4,
     )
     forest_pred = forest_clf.predict(X_test)
     evaluate_and_print(
@@ -330,7 +330,7 @@ if __name__ == "__main__":
         val_df,
         param_grid={"n_estimators": [50, 100], "learning_rate": [0.5, 1.0]},
         verbose=True,
-        grid_n_jobs=6,
+        grid_n_jobs=4,
     )
     adaboost_pred = adaboost_clf.predict(X_test)
     evaluate_and_print(
@@ -349,7 +349,7 @@ if __name__ == "__main__":
             "subsample": [0.8, 1.0],
         },
         verbose=True,
-        grid_n_jobs=6,
+        grid_n_jobs=4,
     )
     xgb_pred = xgb_clf.predict(X_test)
     evaluate_and_print(
