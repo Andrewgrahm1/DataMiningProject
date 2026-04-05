@@ -705,3 +705,109 @@ def add_forward_absolute_move_target(
 
     data[column_name] = targets
     return data
+
+
+def add_forward_move_eligibility_and_direction(
+    data: pd.DataFrame,
+    pct_threshold: float,
+    max_forward_bars: int,
+    *,
+    move_eligible_column: str = "move_eligible",
+    direction_column: str = "direction_target",
+) -> pd.DataFrame:
+    """Label rows where a ≥``pct_threshold`` move occurs within the forward window, and the direction.
+
+    **Eligibility** matches :func:`add_forward_absolute_move_target`: within the next
+    ``max_forward_bars`` bars of the same session, either ``max(high)/close - 1`` or
+    ``1 - min(low)/close`` (vs **current** bar close) reaches ``pct_threshold``.
+
+    **Direction** (only meaningful when eligible): ``1`` if the **up** threshold is first
+    reached by the running forward maximum high, ``0`` if the **down** threshold is first
+    reached by the running forward minimum low. Scan is chronological; if both first occur
+    on the same bar, the larger proportional excursion from ``close`` wins; if equal, ``1``.
+
+    Rows with no forward bars in the session are ineligible; ``direction_target`` is NaN there.
+
+    Expects OHLC columns and MultiIndex ``(symbol, timestamp)``.
+    """
+    if pct_threshold < 0:
+        raise ValueError("pct_threshold must be non-negative")
+    if max_forward_bars < 1:
+        raise ValueError("max_forward_bars must be >= 1")
+
+    n_rows = len(data)
+    eligible = np.zeros(n_rows, dtype=np.int64)
+    direction = np.full(n_rows, np.nan, dtype=np.float64)
+    trade_date = _trade_date_series(data)
+    symbol = data.index.get_level_values("symbol")
+    thr = float(pct_threshold)
+    h_max = int(max_forward_bars)
+
+    for (_sym, _date), group in data.groupby([symbol, trade_date], sort=False):
+        group = group.sort_index(level="timestamp")
+        locs = group.index
+        highs = group["high"].to_numpy(dtype=np.float64, copy=False)
+        lows = group["low"].to_numpy(dtype=np.float64, copy=False)
+        closes = group["close"].to_numpy(dtype=np.float64, copy=False)
+        n = len(group)
+        base = _index_position(data, locs[0])
+
+        for i in range(n):
+            start = i + 1
+            end = min(n, i + 1 + h_max)
+            if start >= end:
+                continue
+            c = float(closes[i])
+            if not np.isfinite(c) or c <= 0:
+                continue
+
+            hi = highs[start:end]
+            lo = lows[start:end]
+            m = len(hi)
+            fh = float(np.max(hi))
+            fl = float(np.min(lo))
+            if not np.isfinite(fh) or not np.isfinite(fl):
+                continue
+            max_up_full = fh / c - 1.0
+            max_down_full = 1.0 - fl / c
+            if max(max_up_full, max_down_full) < thr:
+                continue
+
+            eligible[base + i] = 1
+            run_max = float(hi[0])
+            run_min = float(lo[0])
+            tu: int | None = None
+            td: int | None = None
+            for k in range(m):
+                run_max = max(run_max, float(hi[k]))
+                run_min = min(run_min, float(lo[k]))
+                up_now = run_max / c - 1.0
+                down_now = 1.0 - run_min / c
+                if tu is None and up_now >= thr:
+                    tu = k
+                if td is None and down_now >= thr:
+                    td = k
+                if tu is not None and td is not None:
+                    break
+
+            if tu is None:
+                direction[base + i] = 0.0
+            elif td is None:
+                direction[base + i] = 1.0
+            elif tu < td:
+                direction[base + i] = 1.0
+            elif td < tu:
+                direction[base + i] = 0.0
+            else:
+                run_max_t = float(hi[0])
+                run_min_t = float(lo[0])
+                for k in range(tu + 1):
+                    run_max_t = max(run_max_t, float(hi[k]))
+                    run_min_t = min(run_min_t, float(lo[k]))
+                u_exc = run_max_t / c - 1.0
+                d_exc = 1.0 - run_min_t / c
+                direction[base + i] = 1.0 if u_exc >= d_exc else 0.0
+
+    data[move_eligible_column] = eligible
+    data[direction_column] = direction
+    return data

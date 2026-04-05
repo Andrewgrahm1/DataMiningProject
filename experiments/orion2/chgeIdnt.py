@@ -304,32 +304,32 @@ if __name__ == "__main__":
 
     print("\n====================== Change ID — models (val grid search) ======================")
 
-    # print("Training Decision Tree...")
-    # tree_clf = train_decision_tree(
-    #     train_df,
-    #     val_df,
-    #     target_column=TARGET_COLUMN,
-    #     param_grid={
-    #         "max_depth": [8, 16, 24, None],
-    #         "min_samples_leaf": [100, 500],
-    #     },
-    #     scoring="f1",
-    #     verbose=True,
-    #     grid_n_jobs=4,
-    # )
-    # print_test_results("Decision tree", y_test, tree_clf.predict(x_test))
+    print("Training Decision Tree...")
+    tree_clf = train_decision_tree(
+        train_df,
+        val_df,
+        target_column=TARGET_COLUMN,
+        param_grid={
+            "max_depth": [8, 16, 24, None],
+            "min_samples_leaf": [100, 500],
+        },
+        scoring="f1",
+        verbose=True,
+        grid_n_jobs=4,
+    )
+    print_test_results("Decision tree", y_test, tree_clf.predict(x_test))
 
-    # print("Training Naive Bayes...")
-    # nb_clf = train_naive_bayes(
-    #     train_df,
-    #     val_df,
-    #     target_column=TARGET_COLUMN,
-    #     param_grid={"var_smoothing": [1e-9, 1e-8, 1e-7, 1e-6]},
-    #     scoring="f1",
-    #     verbose=True,
-    #     grid_n_jobs=4,
-    # )
-    # print_test_results("Naive Bayes", y_test, nb_clf.predict(x_test))
+    print("Training Naive Bayes...")
+    nb_clf = train_naive_bayes(
+        train_df,
+        val_df,
+        target_column=TARGET_COLUMN,
+        param_grid={"var_smoothing": [1e-9, 1e-8, 1e-7, 1e-6]},
+        scoring="f1",
+        verbose=True,
+        grid_n_jobs=4,
+    )
+    print_test_results("Naive Bayes", y_test, nb_clf.predict(x_test))
 
     knn_clf = train_knn(
         train_df,

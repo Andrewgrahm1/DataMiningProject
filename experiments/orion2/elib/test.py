@@ -11,6 +11,7 @@ from experiments.orion2.elib.elib import (
     add_feature_close_ema_pct_diff,
     add_feature_close_sma_pct_diff,
     add_forward_absolute_move_target,
+    add_forward_move_eligibility_and_direction,
     add_volume_roll_mean_by_day,
     split_training_data,
     zscore_feature_splits,
@@ -338,6 +339,72 @@ class TestAddForwardAbsoluteMoveTarget(unittest.TestCase):
         df = _ohlc("AAPL", [("2025-01-02 09:31", 100, 101, 99, 100)])
         with self.assertRaises(ValueError):
             add_forward_absolute_move_target(df, 0.01, 0)
+
+
+class TestAddForwardMoveEligibilityAndDirection(unittest.TestCase):
+    """Tests for ``add_forward_move_eligibility_and_direction``."""
+
+    def test_up_only_eligible_direction_one(self):
+        df = _ohlc(
+            "AAPL",
+            [
+                ("2025-01-02 09:31", 100, 101, 99, 100),
+                ("2025-01-02 09:32", 100, 105, 99, 102),
+            ],
+        )
+        out = add_forward_move_eligibility_and_direction(df.copy(), 0.03, 5)
+        self.assertEqual(int(out["move_eligible"].iloc[0]), 1)
+        self.assertEqual(int(out["direction_target"].iloc[0]), 1)
+
+    def test_down_only_eligible_direction_zero(self):
+        df = _ohlc(
+            "AAPL",
+            [
+                ("2025-01-02 09:31", 100, 101, 99, 100),
+                ("2025-01-02 09:32", 100, 101, 94, 98),
+            ],
+        )
+        out = add_forward_move_eligibility_and_direction(df.copy(), 0.03, 5)
+        self.assertEqual(int(out["move_eligible"].iloc[0]), 1)
+        self.assertEqual(int(out["direction_target"].iloc[0]), 0)
+
+    def test_no_move_ineligible(self):
+        df = _ohlc(
+            "AAPL",
+            [
+                ("2025-01-02 09:31", 100, 101, 99, 100),
+                ("2025-01-02 09:32", 100, 101, 99, 100),
+            ],
+        )
+        out = add_forward_move_eligibility_and_direction(df.copy(), 0.05, 5)
+        self.assertEqual(int(out["move_eligible"].iloc[0]), 0)
+        self.assertTrue(np.isnan(out["direction_target"].iloc[0]))
+
+    def test_up_hits_before_down(self):
+        # Bar1: up 10% >= 3% at k=0; bar2: running min reaches 12% down first at k=1 → tu=0 < td=1 → up wins
+        df = _ohlc(
+            "AAPL",
+            [
+                ("2025-01-02 09:31", 100, 101, 99, 100),
+                ("2025-01-02 09:32", 100, 110, 99, 105),
+                ("2025-01-02 09:33", 100, 102, 88, 95),
+            ],
+        )
+        out = add_forward_move_eligibility_and_direction(df.copy(), 0.03, 5)
+        self.assertEqual(int(out["move_eligible"].iloc[0]), 1)
+        self.assertEqual(int(out["direction_target"].iloc[0]), 1)
+
+    def test_matches_absolute_move_eligibility(self):
+        df = _ohlc(
+            "AAPL",
+            [
+                ("2025-01-02 16:00", 100, 101, 99, 100),
+                ("2025-01-03 09:31", 100, 110, 99, 105),
+            ],
+        )
+        abs_t = add_forward_absolute_move_target(df.copy(), 0.05, 10, column_name="t")
+        dir_t = add_forward_move_eligibility_and_direction(df.copy(), 0.05, 10)
+        self.assertEqual(int(dir_t["move_eligible"].iloc[0]), int(abs_t["t"].iloc[0]))
 
 
 if __name__ == "__main__":
