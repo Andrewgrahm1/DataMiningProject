@@ -233,26 +233,83 @@ def _true_range_np(high: np.ndarray, low: np.ndarray, close: np.ndarray) -> np.n
     return tr
 
 
-def _wilder_atr_from_tr(tr: np.ndarray, period: int) -> np.ndarray:
-    """Wilder (smoothed) ATR from true range. Rows before the first full ATR are 0.
+def _wilder_smooth_np(x: np.ndarray, period: int) -> np.ndarray:
+    """Wilder (RMA) smooth of ``x``. Index ``period - 1`` is the mean of ``x[:period]``; earlier are 0.
 
-    For ``period == 1``, ATR equals TR on every bar (no leading zeros).
+    For ``period == 1``, output equals ``x`` (no leading zeros).
     """
-    n = len(tr)
+    n = len(x)
     out = np.zeros(n, dtype=np.float64)
     if period < 1:
         raise ValueError("period must be >= 1")
     if n == 0:
         return out
     if period == 1:
-        out[:] = tr
+        out[:] = x
         return out
     if n < period:
         return out
-    out[period - 1] = float(np.mean(tr[:period]))
+    out[period - 1] = float(np.mean(x[:period]))
     for i in range(period, n):
-        out[i] = (out[i - 1] * (period - 1) + tr[i]) / period
+        out[i] = (out[i - 1] * (period - 1) + x[i]) / period
     return out
+
+
+def _wilder_atr_from_tr(tr: np.ndarray, period: int) -> np.ndarray:
+    """Wilder (smoothed) ATR from true range. Rows before the first full ATR are 0.
+
+    For ``period == 1``, ATR equals TR on every bar (no leading zeros).
+    """
+    return _wilder_smooth_np(tr, period)
+
+
+def _plus_dm_minus_dm_np(high: np.ndarray, low: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Welles Wilder +DM / -DM; index 0 is zero (no prior bar)."""
+    n = len(high)
+    pdm = np.zeros(n, dtype=np.float64)
+    mdm = np.zeros(n, dtype=np.float64)
+    if n <= 1:
+        return pdm, mdm
+    up = high[1:] - high[:-1]
+    down = low[:-1] - low[1:]
+    plus_bar = (up > down) & (up > 0.0)
+    minus_bar = (down > up) & (down > 0.0)
+    pdm[1:] = np.where(plus_bar, up, 0.0)
+    mdm[1:] = np.where(minus_bar, down, 0.0)
+    return pdm, mdm
+
+
+def _adx_plus_di_minus_di_np(
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    period: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Wilder +DI, -DI (0–100), and ADX from high/low/close."""
+    n = len(close)
+    plus_di = np.zeros(n, dtype=np.float64)
+    minus_di = np.zeros(n, dtype=np.float64)
+    adx = np.zeros(n, dtype=np.float64)
+    if period < 1 or n == 0:
+        return plus_di, minus_di, adx
+
+    tr = _true_range_np(high, low, close)
+    pdm, mdm = _plus_dm_minus_dm_np(high, low)
+    tr_s = _wilder_smooth_np(tr, period)
+    pdm_s = _wilder_smooth_np(pdm, period)
+    mdm_s = _wilder_smooth_np(mdm, period)
+
+    denom_ok = np.isfinite(tr_s) & (tr_s > 0)
+    plus_di[denom_ok] = 100.0 * pdm_s[denom_ok] / tr_s[denom_ok]
+    minus_di[denom_ok] = 100.0 * mdm_s[denom_ok] / tr_s[denom_ok]
+
+    di_sum = plus_di + minus_di
+    dx = np.zeros(n, dtype=np.float64)
+    ok_dx = np.isfinite(di_sum) & (di_sum > 0) & np.isfinite(plus_di) & np.isfinite(minus_di)
+    dx[ok_dx] = 100.0 * np.abs(plus_di[ok_dx] - minus_di[ok_dx]) / di_sum[ok_dx]
+
+    adx[:] = _wilder_smooth_np(dx, period)
+    return plus_di, minus_di, adx
 
 
 def add_feature_atr(
@@ -290,6 +347,54 @@ def add_feature_atr(
         for p in period_list:
             atr = _wilder_atr_from_tr(tr, p)
             columns[name_fn(p)][base : base + n] = atr
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def add_feature_adx_di(
+    data: pd.DataFrame,
+    period_list: list[int],
+    *,
+    adx_column_name_fn: Callable[[int], str] | None = None,
+    plus_di_column_name_fn: Callable[[int], str] | None = None,
+    minus_di_column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Add Wilder ADX, +DI, and -DI per period; timestamp order per symbol (continuous across days).
+
+    +DI / -DI are scaled to 0–100. ADX is a Wilder smooth of DX (directional index) with the same
+    ``period``. Leading bars follow the same warmup as other Wilder features in this module.
+
+    Expects MultiIndex ``(symbol, timestamp)`` and columns ``high``, ``low``, ``close``.
+    """
+    if not period_list:
+        return data
+    for p in period_list:
+        if p < 1:
+            raise ValueError("each period must be >= 1")
+    adx_fn = adx_column_name_fn if adx_column_name_fn is not None else (lambda n: f"adx_{n}")
+    p_fn = plus_di_column_name_fn if plus_di_column_name_fn is not None else (lambda n: f"plus_di_{n}")
+    m_fn = minus_di_column_name_fn if minus_di_column_name_fn is not None else (lambda n: f"minus_di_{n}")
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    col_names: list[str] = []
+    for p in period_list:
+        col_names.extend([adx_fn(p), p_fn(p), m_fn(p)])
+    columns = {name: np.zeros(n_rows, dtype=np.float64) for name in col_names}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        locs = group.index
+        base = _index_position(data, locs[0])
+        n = len(group)
+        high = group["high"].to_numpy(dtype=np.float64, copy=False)
+        low = group["low"].to_numpy(dtype=np.float64, copy=False)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        for p in period_list:
+            pdi, mdi, adxv = _adx_plus_di_minus_di_np(high, low, close, p)
+            columns[p_fn(p)][base : base + n] = pdi
+            columns[m_fn(p)][base : base + n] = mdi
+            columns[adx_fn(p)][base : base + n] = adxv
 
     new_df = pd.DataFrame(columns, index=data.index)
     return pd.concat([data, new_df], axis=1)
@@ -529,6 +634,21 @@ def _pct_diff_close_vs_reference(close: np.ndarray, ref: np.ndarray) -> np.ndarr
     return out
 
 
+def _close_lag_pct_diff_np(close: np.ndarray, lag: int) -> np.ndarray:
+    """``(close[i] - close[i-lag]) / close[i-lag]``; first ``lag`` indices are 0 (incomplete lookback)."""
+    n = len(close)
+    out = np.zeros(n, dtype=np.float64)
+    if lag < 1 or n <= lag:
+        return out
+    prev = close[:-lag]
+    cur = close[lag:]
+    valid = np.isfinite(prev) & (prev > 0) & np.isfinite(cur)
+    seg = np.zeros(n - lag, dtype=np.float64)
+    seg[valid] = (cur[valid] - prev[valid]) / prev[valid]
+    out[lag:] = seg
+    return out
+
+
 def _rolling_session_vwap_pct_diff_np(
     high: np.ndarray,
     low: np.ndarray,
@@ -645,6 +765,43 @@ def add_feature_close_ema_pct_diff(
         for sp in span_list:
             ema = _ema_1d(close, sp)
             columns[name_fn(sp)][base : base + n] = _pct_diff_close_vs_reference(close, ema)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def add_feature_close_lag_pct_diff(
+    data: pd.DataFrame,
+    lag_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Add ``(close - close_lag) / close_lag`` for each lag, timestamp order per symbol.
+
+    Same grouping as :func:`add_feature_close_sma_pct_diff`: chronological bars per symbol
+    (lag may cross session boundaries).
+    """
+    if not lag_list:
+        return data
+    for lag in lag_list:
+        if lag < 1:
+            raise ValueError("each lag must be >= 1")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda n: f"close_lag_{n}_pct_diff")
+    )
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(lag): np.zeros(n_rows, dtype=np.float64) for lag in lag_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        for lag in lag_list:
+            columns[name_fn(lag)][base : base + n] = _close_lag_pct_diff_np(close, lag)
 
     new_df = pd.DataFrame(columns, index=data.index)
     return pd.concat([data, new_df], axis=1)

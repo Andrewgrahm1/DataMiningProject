@@ -25,11 +25,16 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, roc_auc_score
 
 from experiments.orion2.elib.elib import (
+    add_feature_adx_di,
+    add_feature_atr,
     add_feature_bars_since_open,
     add_feature_bars_until_close,
     add_feature_close_bollinger_pct_diff,
+    add_feature_close_ema_pct_diff,
+    add_feature_close_lag_pct_diff,
     add_feature_close_sma_pct_diff,
     add_feature_close_vwap_pct_diff,
+    add_feature_rsi,
     add_forward_move_eligibility_and_direction,
     bollinger_std_column_tag,
     add_volume_roll_mean_by_day,
@@ -50,8 +55,13 @@ from lib.models import (
 TARGET_COLUMN = "direction_target"
 MOVE_ELIGIBLE_COLUMN = "move_eligible"
 VOLUME_ROLL_WINDOWS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
+ATR_PERIODS = (14, 21, 60, 90, 180)
+ADX_DI_PERIODS = (14, 21)
+RSI_PERIODS = (7, 14, 21)
 VWAP_WINDOWS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
 CLOSE_SMA_PERIODS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
+CLOSE_EMA_SPANS = CLOSE_SMA_PERIODS
+CLOSE_LAG_PCT_DIFF_BARS = CLOSE_SMA_PERIODS
 BOLLINGER_PERIODS = CLOSE_SMA_PERIODS
 BOLLINGER_STD_MULTIPLES = (2.0,)
 COLUMNS_EXCLUDED_FROM_ZSCORE: tuple[str, ...] = (TARGET_COLUMN,)
@@ -63,18 +73,25 @@ def training_column_names() -> list[str]:
         TARGET_COLUMN,
         "bars_until_close",
         "bars_since_open",
-        *[f"volume_roll_mean_{w}" for w in VOLUME_ROLL_WINDOWS],
-        *[f"typical_vwap_{w}_pct_diff" for w in VWAP_WINDOWS],
+        *[f"atr_{p}" for p in ATR_PERIODS],
+        # *[f"adx_{p}" for p in ADX_DI_PERIODS],
+        # *[f"plus_di_{p}" for p in ADX_DI_PERIODS],
+        # *[f"minus_di_{p}" for p in ADX_DI_PERIODS],
+        *[f"rsi_{p}" for p in RSI_PERIODS],
+        # *[f"volume_roll_mean_{w}" for w in VOLUME_ROLL_WINDOWS],
+        # *[f"typical_vwap_{w}_pct_diff" for w in VWAP_WINDOWS],
         *[f"close_sma_{p}_pct_diff" for p in CLOSE_SMA_PERIODS],
-        *[
-            name
-            for p in BOLLINGER_PERIODS
-            for k in BOLLINGER_STD_MULTIPLES
-            for name in (
-                f"close_bb_upper_{p}_{bollinger_std_column_tag(k)}_pct_diff",
-                f"close_bb_lower_{p}_{bollinger_std_column_tag(k)}_pct_diff",
-            )
-        ],
+        # *[f"close_ema_{p}_pct_diff" for p in CLOSE_EMA_SPANS],
+        *[f"close_lag_{n}_pct_diff" for n in CLOSE_LAG_PCT_DIFF_BARS],
+        # *[
+        #     name
+        #     for p in BOLLINGER_PERIODS
+        #     for k in BOLLINGER_STD_MULTIPLES
+        #     for name in (
+        #         f"close_bb_upper_{p}_{bollinger_std_column_tag(k)}_pct_diff",
+        #         f"close_bb_lower_{p}_{bollinger_std_column_tag(k)}_pct_diff",
+        #     )
+        # ],
     ]
 
 
@@ -95,14 +112,19 @@ def add_features(
     )
     add_feature_bars_until_close(out)
     add_feature_bars_since_open(out)
-    out = add_volume_roll_mean_by_day(out, list(VOLUME_ROLL_WINDOWS))
-    out = add_feature_close_vwap_pct_diff(out, list(VWAP_WINDOWS))
+    out = add_feature_atr(out, list(ATR_PERIODS))
+    # out = add_feature_adx_di(out, list(ADX_DI_PERIODS))
+    out = add_feature_rsi(out, list(RSI_PERIODS))
+    # out = add_volume_roll_mean_by_day(out, list(VOLUME_ROLL_WINDOWS))
+    # out = add_feature_close_vwap_pct_diff(out, list(VWAP_WINDOWS))
     out = add_feature_close_sma_pct_diff(out, list(CLOSE_SMA_PERIODS))
-    out = add_feature_close_bollinger_pct_diff(
-        out,
-        list(BOLLINGER_PERIODS),
-        std_multiples=BOLLINGER_STD_MULTIPLES,
-    )
+    out = add_feature_close_ema_pct_diff(out, list(CLOSE_EMA_SPANS))
+    out = add_feature_close_lag_pct_diff(out, list(CLOSE_LAG_PCT_DIFF_BARS))
+    # out = add_feature_close_bollinger_pct_diff(
+    #     out,
+    #     list(BOLLINGER_PERIODS),
+    #     std_multiples=BOLLINGER_STD_MULTIPLES,
+    # )
 
     out = out.loc[out[MOVE_ELIGIBLE_COLUMN] == 1].copy()
     out = out.drop(columns=[MOVE_ELIGIBLE_COLUMN])
@@ -286,10 +308,10 @@ if __name__ == "__main__":
         validation_fraction=VALIDATION_FRACTION,
         test_fraction=TEST_FRACTION,
     )
-    train_df = downsample_majority_class_to_match_minority(train_df, target_column=TARGET_COLUMN)
-    val_df = downsample_majority_class_to_match_minority(
-        val_df, target_column=TARGET_COLUMN, random_state=43
-    )
+    # train_df = downsample_majority_class_to_match_minority(train_df, target_column=TARGET_COLUMN)
+    # val_df = downsample_majority_class_to_match_minority(
+    #     val_df, target_column=TARGET_COLUMN, random_state=43
+    # )
     train_df, val_df, test_df = zscore_feature_splits(
         train_df,
         val_df,
@@ -346,20 +368,20 @@ if __name__ == "__main__":
     )
     print_test_results("K-nearest neighbors", y_test, knn_clf.predict(x_test))
 
-    forest_clf = train_forest(
-        train_df,
-        val_df,
-        target_column=TARGET_COLUMN,
-        param_grid={
-            "n_estimators": [100, 200],
-            "max_depth": [12, 20, None],
-            "min_samples_leaf": [100, 500],
-        },
-        scoring="f1",
-        verbose=True,
-        grid_n_jobs=4,
-    )
-    print_test_results("Random forest", y_test, forest_clf.predict(x_test))
+    # forest_clf = train_forest(
+    #     train_df,
+    #     val_df,
+    #     target_column=TARGET_COLUMN,
+    #     param_grid={
+    #         "n_estimators": [100, 200],
+    #         "max_depth": [12, 20, None],
+    #         "min_samples_leaf": [100, 500],
+    #     },
+    #     scoring="f1",
+    #     verbose=True,
+    #     grid_n_jobs=4,
+    # )
+    # print_test_results("Random forest", y_test, forest_clf.predict(x_test))
 
     print("Training XGBoost...")
     xgb_clf = train_xgboost(
@@ -384,7 +406,7 @@ if __name__ == "__main__":
         val_df,
         target_column=TARGET_COLUMN,
         param_grid={
-            "hidden_layer_sizes": [(64,), (128, 64)],
+            "hidden_layer_sizes": [(64,), (128,), (128, 64),],
             "alpha": [1e-4, 1e-3],
             "learning_rate_init": [0.001],
         },
@@ -395,10 +417,10 @@ if __name__ == "__main__":
     print_test_results("Neural network (MLP)", y_test, mlp_clf.predict(x_test))
 
     models: list[tuple[str, Any]] = [
-        ("Decision tree", tree_clf),
-        ("Naive Bayes", nb_clf),
-        ("K-nearest neighbors", knn_clf),
-        ("Random forest", forest_clf),
+        # ("Decision tree", tree_clf),
+        # ("Naive Bayes", nb_clf),
+        # ("K-nearest neighbors", knn_clf),
+        # ("Random forest", forest_clf),
         ("XGBoost", xgb_clf),
         ("Neural network (MLP)", mlp_clf),
     ]
