@@ -1,0 +1,85 @@
+(venv) PS C:\Users\orion\OneDrive\Desktop\DataMiningProject\experiments\orion2> python .\chgeIdnt.py    
+Loading cached data: orion_TQQQ_20220101_20251231_clean.csv
+================== Change Identification ===============
+Symbol: TQQQ
+Date Range: 2022-01-03 to 2025-12-30
+Total Bars: 61,122
+========================================================
+
+--- Train / validation / test split stats ---
+Train: 30,070 rows | 15,035 positive (50.00%) | 2022-01-03 → 2024-08-07 (2.59 years)
+Validation: 4,946 rows | 2,473 positive (50.00%) | 2024-08-07 → 2025-03-14 (0.60 years)
+Test: 12,224 rows | 3,011 positive (24.63%) | 2025-03-14 → 2025-12-30 (0.80 years)
+
+====================== Change ID — models (val grid search) ======================
+Training Decision Tree...
+  best params: {'max_depth': 16, 'min_samples_leaf': 100} | best f1 (val): 0.6810
+
+--- Decision tree ---
+Accuracy: 10,002 / 12,224 (81.8226%)
+Recall: 1,893 / 3,011 (62.8695%)
+Precision: 1,893 / 2,997 (63.1632%)
+F1 score: 0.630160
+ROC AUC: 0.754432
+
+Training Naive Bayes...
+  best params: {'var_smoothing': 1e-09} | best f1 (val): 0.3990
+
+--- Naive Bayes ---
+Accuracy: 9,607 / 12,224 (78.5913%)
+Recall: 868 / 3,011 (28.8276%)
+Precision: 868 / 1,342 (64.6796%)
+F1 score: 0.398805
+ROC AUC: 0.618414
+
+  best params: {'n_neighbors': 15, 'p': 1, 'weights': 'distance'} | best f1 (val): 0.6682
+
+--- K-nearest neighbors ---
+Accuracy: 9,912 / 12,224 (81.0864%)
+Recall: 1,717 / 3,011 (57.0242%)
+Precision: 1,717 / 2,735 (62.7788%)
+F1 score: 0.597633
+ROC AUC: 0.729873
+
+  best params: {'max_depth': 12, 'min_samples_leaf': 100, 'n_estimators': 100} | best f1 (val): 0.6948
+
+--- Random forest ---
+Accuracy: 10,191 / 12,224 (83.3688%)
+Recall: 1,999 / 3,011 (66.3899%)
+Precision: 1,999 / 3,020 (66.1921%)
+F1 score: 0.662908
+ROC AUC: 0.776539
+
+Training XGBoost...
+  best params: {'learning_rate': 0.1, 'max_depth': 4, 'n_estimators': 150, 'subsample': 0.8} | best f1 (val): 0.7576
+
+--- XGBoost ---
+Accuracy: 10,058 / 12,224 (82.2808%)
+Recall: 1,958 / 3,011 (65.0282%)
+Precision: 1,958 / 3,071 (63.7577%)
+F1 score: 0.643867
+ROC AUC: 0.764737
+
+Training neural network (MLP)...
+  best params: {'alpha': 0.0001, 'hidden_layer_sizes': (64,), 'learning_rate_init': 0.001} | best f1 (val): 0.7727
+
+--- Neural network (MLP) ---
+Accuracy: 10,153 / 12,224 (83.0579%)
+Recall: 2,073 / 3,011 (68.8476%)
+Precision: 2,073 / 3,206 (64.6600%)
+F1 score: 0.666881
+ROC AUC: 0.782749
+
+
+====================== Unanimous ensemble (all 1 → 1, all 0 → 0, else -1) ======================
+
+--- Unanimous ensemble ---
+Unanimous 1: 2,039 (16.6803%)
+Unanimous 0: 8,291 (67.8256%)
+Disagree (label -1): 1,894 (15.4941%)
+On unanimous rows only (10,330 / 12,224):
+Accuracy: 9,060 / 10,330 (87.7057%)
+Recall: 1,506 / 2,243 (67.1422%)
+Precision: 1,506 / 2,039 (73.8597%)
+F1 score: 0.703410
+ROC AUC: 0.802757

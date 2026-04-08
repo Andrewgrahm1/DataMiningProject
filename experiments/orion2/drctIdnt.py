@@ -280,7 +280,7 @@ if __name__ == "__main__":
     SYMBOL = "TQQQ"
     START_DATE = datetime(2022, 1, 1)
     END_DATE = datetime(2025, 12, 31)
-    MOVE_PCT_THRESHOLD = 0.01
+    MOVE_PCT_THRESHOLD = 0.02
     MAX_FORWARD_BARS = 90
     VALIDATION_FRACTION = 0.15
     TEST_FRACTION = 0.2
@@ -368,20 +368,20 @@ if __name__ == "__main__":
     )
     print_test_results("K-nearest neighbors", y_test, knn_clf.predict(x_test))
 
-    # forest_clf = train_forest(
-    #     train_df,
-    #     val_df,
-    #     target_column=TARGET_COLUMN,
-    #     param_grid={
-    #         "n_estimators": [100, 200],
-    #         "max_depth": [12, 20, None],
-    #         "min_samples_leaf": [100, 500],
-    #     },
-    #     scoring="f1",
-    #     verbose=True,
-    #     grid_n_jobs=4,
-    # )
-    # print_test_results("Random forest", y_test, forest_clf.predict(x_test))
+    forest_clf = train_forest(
+        train_df,
+        val_df,
+        target_column=TARGET_COLUMN,
+        param_grid={
+            "n_estimators": [100, 200],
+            "max_depth": [12, 20, None],
+            "min_samples_leaf": [100, 500],
+        },
+        scoring="f1",
+        verbose=True,
+        grid_n_jobs=4,
+    )
+    print_test_results("Random forest", y_test, forest_clf.predict(x_test))
 
     print("Training XGBoost...")
     xgb_clf = train_xgboost(

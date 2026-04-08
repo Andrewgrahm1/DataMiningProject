@@ -16,6 +16,9 @@ from lib.common.common import (
     _trade_date_series,
     add_feature_bars_since_open,
     add_feature_bars_until_close,
+    add_feature_pct_change_batch,
+    add_range_target_column,
+    create_target_column,
 )
 
 _CACHE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "etc" / "data"
@@ -807,6 +810,240 @@ def add_feature_close_lag_pct_diff(
     return pd.concat([data, new_df], axis=1)
 
 
+def _volume_lag_pct_diff_np(volume: np.ndarray, lag: int) -> np.ndarray:
+    """``(volume[i] - volume[i-lag]) / volume[i-lag]``; first ``lag`` indices are 0.
+
+    Denominator must be finite and **positive** (same rule as :func:`_close_lag_pct_diff_np`).
+    """
+    n = len(volume)
+    out = np.zeros(n, dtype=np.float64)
+    if lag < 1 or n <= lag:
+        return out
+    prev = volume[:-lag]
+    cur = volume[lag:]
+    valid = np.isfinite(prev) & (prev > 0) & np.isfinite(cur)
+    seg = np.zeros(n - lag, dtype=np.float64)
+    seg[valid] = (cur[valid] - prev[valid]) / prev[valid]
+    out[lag:] = seg
+    return out
+
+
+def add_feature_volume_lag_pct_diff(
+    data: pd.DataFrame,
+    lag_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+    volume_column: str = "volume",
+) -> pd.DataFrame:
+    """Add ``(volume - volume_lag) / volume_lag`` for each lag, timestamp order per symbol.
+
+    Same grouping as :func:`add_feature_close_lag_pct_diff` (lag may cross session boundaries).
+    """
+    if not lag_list:
+        return data
+    for lag in lag_list:
+        if lag < 1:
+            raise ValueError("each lag must be >= 1")
+    if volume_column not in data.columns:
+        raise ValueError(f"add_feature_volume_lag_pct_diff: missing column {volume_column!r}")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda n: f"volume_lag_{n}_pct_diff")
+    )
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(lag): np.zeros(n_rows, dtype=np.float64) for lag in lag_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        vol = group[volume_column].to_numpy(dtype=np.float64, copy=False)
+        for lag in lag_list:
+            columns[name_fn(lag)][base : base + n] = _volume_lag_pct_diff_np(vol, lag)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def _close_minus_high_at_lag_np(close: np.ndarray, high: np.ndarray, lag: int) -> np.ndarray:
+    """At row index ``i``, ``close[i - lag] - high[i - lag]``; indices ``i < lag`` are 0."""
+    n = len(close)
+    out = np.zeros(n, dtype=np.float64)
+    if lag < 0 or n == 0:
+        return out
+    if lag == 0:
+        valid = np.isfinite(close) & np.isfinite(high)
+        out[valid] = close[valid] - high[valid]
+        return out
+    if n <= lag:
+        return out
+    c = close[:-lag]
+    h = high[:-lag]
+    valid = np.isfinite(c) & np.isfinite(h)
+    seg = np.zeros(n - lag, dtype=np.float64)
+    seg[valid] = c[valid] - h[valid]
+    out[lag:] = seg
+    return out
+
+
+def add_feature_close_minus_high_lag(
+    data: pd.DataFrame,
+    lag_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Add ``close - high`` from the bar ``lag`` steps back (``lag == 0`` = current bar), per symbol.
+
+    Chronological order within each symbol matches :func:`add_feature_close_lag_pct_diff` (lags may
+    cross session boundaries). Expects columns ``close`` and ``high``.
+    """
+    if not lag_list:
+        return data
+    for lag in lag_list:
+        if lag < 0:
+            raise ValueError("each lag must be >= 0")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda n: f"close_minus_high_lag_{n}")
+    )
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(lag): np.zeros(n_rows, dtype=np.float64) for lag in lag_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        high = group["high"].to_numpy(dtype=np.float64, copy=False)
+        for lag in lag_list:
+            columns[name_fn(lag)][base : base + n] = _close_minus_high_at_lag_np(close, high, lag)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def _high_minus_close_at_lag_np(high: np.ndarray, close: np.ndarray, lag: int) -> np.ndarray:
+    """At row index ``i``, ``high[i - lag] - close[i - lag]``; indices ``i < lag`` are 0."""
+    n = len(close)
+    out = np.zeros(n, dtype=np.float64)
+    if lag < 0 or n == 0:
+        return out
+    if lag == 0:
+        valid = np.isfinite(close) & np.isfinite(high)
+        out[valid] = high[valid] - close[valid]
+        return out
+    if n <= lag:
+        return out
+    h = high[:-lag]
+    c = close[:-lag]
+    valid = np.isfinite(c) & np.isfinite(h)
+    seg = np.zeros(n - lag, dtype=np.float64)
+    seg[valid] = h[valid] - c[valid]
+    out[lag:] = seg
+    return out
+
+
+def add_feature_high_minus_close_lag(
+    data: pd.DataFrame,
+    lag_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Add ``high - close`` from the bar ``lag`` steps back (``lag == 0`` = current bar), per symbol.
+
+    Same grouping and lag semantics as :func:`add_feature_close_minus_high_lag`. Expects columns
+    ``high`` and ``close``.
+    """
+    if not lag_list:
+        return data
+    for lag in lag_list:
+        if lag < 0:
+            raise ValueError("each lag must be >= 0")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda n: f"high_minus_close_lag_{n}")
+    )
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(lag): np.zeros(n_rows, dtype=np.float64) for lag in lag_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        high = group["high"].to_numpy(dtype=np.float64, copy=False)
+        for lag in lag_list:
+            columns[name_fn(lag)][base : base + n] = _high_minus_close_at_lag_np(high, close, lag)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def _close_minus_low_at_lag_np(close: np.ndarray, low: np.ndarray, lag: int) -> np.ndarray:
+    """At row index ``i``, ``close[i - lag] - low[i - lag]``; indices ``i < lag`` are 0."""
+    n = len(close)
+    out = np.zeros(n, dtype=np.float64)
+    if lag < 0 or n == 0:
+        return out
+    if lag == 0:
+        valid = np.isfinite(close) & np.isfinite(low)
+        out[valid] = close[valid] - low[valid]
+        return out
+    if n <= lag:
+        return out
+    c = close[:-lag]
+    lo = low[:-lag]
+    valid = np.isfinite(c) & np.isfinite(lo)
+    seg = np.zeros(n - lag, dtype=np.float64)
+    seg[valid] = c[valid] - lo[valid]
+    out[lag:] = seg
+    return out
+
+
+def add_feature_close_minus_low_lag(
+    data: pd.DataFrame,
+    lag_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Add ``close - low`` from the bar ``lag`` steps back (``lag == 0`` = current bar), per symbol.
+
+    Same grouping and lag semantics as :func:`add_feature_close_minus_high_lag`. Expects columns
+    ``close`` and ``low``.
+    """
+    if not lag_list:
+        return data
+    for lag in lag_list:
+        if lag < 0:
+            raise ValueError("each lag must be >= 0")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda n: f"close_minus_low_lag_{n}")
+    )
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(lag): np.zeros(n_rows, dtype=np.float64) for lag in lag_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        low = group["low"].to_numpy(dtype=np.float64, copy=False)
+        for lag in lag_list:
+            columns[name_fn(lag)][base : base + n] = _close_minus_low_at_lag_np(close, low, lag)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
 def add_forward_absolute_move_target(
     data: pd.DataFrame,
     pct_threshold: float,
@@ -968,3 +1205,297 @@ def add_forward_move_eligibility_and_direction(
     data[move_eligible_column] = eligible
     data[direction_column] = direction
     return data
+
+
+# --- Orion experiment training table (same schema as former ``experiments.orion.elib``) ----------
+
+
+def _volume_zscore_rolling_1d(values: np.ndarray, window: int) -> np.ndarray:
+    """Z-score vs trailing mean/std over ``window`` bars (inclusive); incomplete window → 0."""
+    n = len(values)
+    out = np.zeros(n, dtype=np.float64)
+    if window < 1 or n == 0:
+        return out
+    s = pd.Series(values, dtype=np.float64, copy=False)
+    roll_mean = s.rolling(window, min_periods=window).mean()
+    roll_std = s.rolling(window, min_periods=window).std(ddof=0)
+    rm = roll_mean.to_numpy(dtype=np.float64, copy=False)
+    rs = roll_std.to_numpy(dtype=np.float64, copy=False)
+    valid = np.isfinite(rm) & np.isfinite(rs) & (rs > 0)
+    out[valid] = (values - rm)[valid] / rs[valid]
+    return out
+
+
+def _volume_zscore_columns_by_day(
+    data: pd.DataFrame,
+    values_all: np.ndarray,
+    window_list: list[int],
+    name_fn: Callable[[int], str],
+) -> dict[str, np.ndarray]:
+    n_rows = len(data)
+    trade_date = _trade_date_series(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(w): np.zeros(n_rows, dtype=np.float64) for w in window_list}
+
+    for (_sym, _date), group in data.groupby([symbol, trade_date], sort=False):
+        group = group.sort_index(level="timestamp")
+        base = _index_position(data, group.index[0])
+        n = len(group)
+        seg = values_all[base : base + n]
+        for w in window_list:
+            columns[name_fn(w)][base : base + n] = _volume_zscore_rolling_1d(seg, w)
+
+    return columns
+
+
+def add_feature_volume_zscore_by_day(
+    data: pd.DataFrame,
+    window_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """Volume z-score within each trading day (same semantics as orion ``add_feature_volume_zscore``)."""
+    if not window_list:
+        return data
+    for w in window_list:
+        if w < 1:
+            raise ValueError("each window size must be >= 1")
+    name_fn = column_name_fn if column_name_fn is not None else (lambda x: f"volume_zscore_{x}")
+    vol_all = data["volume"].to_numpy(dtype=np.float64, copy=False)
+    columns = _volume_zscore_columns_by_day(data, vol_all, window_list, name_fn)
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def add_feature_day_of_week(
+    data: pd.DataFrame,
+    *,
+    column_name: str = "day_of_week",
+) -> pd.DataFrame:
+    ts = data.index.get_level_values("timestamp")
+    series = pd.Series(ts, index=data.index)
+    if hasattr(ts, "tz") and ts.tz is not None:
+        series = series.dt.tz_convert("America/New_York")
+    data[column_name] = (series.dt.dayofweek + 1).astype(np.int64)
+    return data
+
+
+def _rsi_from_close_wilder(closes: np.ndarray, period: int) -> np.ndarray:
+    """Wilder RSI (orion elib semantics); indices ``0 .. period-1`` are 0; first valid at ``period``."""
+    n = len(closes)
+    out = np.zeros(n, dtype=np.float64)
+    if period < 2:
+        raise ValueError("RSI period must be >= 2")
+    if n == 0:
+        return out
+    delta = np.zeros(n, dtype=np.float64)
+    delta[1:] = closes[1:] - closes[:-1]
+    gain = np.maximum(delta, 0.0)
+    loss = np.maximum(-delta, 0.0)
+    if n < period + 1:
+        return out
+    avg_gain = np.zeros(n, dtype=np.float64)
+    avg_loss = np.zeros(n, dtype=np.float64)
+    avg_gain[period] = float(np.mean(gain[1 : period + 1]))
+    avg_loss[period] = float(np.mean(loss[1 : period + 1]))
+    for i in range(period + 1, n):
+        avg_gain[i] = (avg_gain[i - 1] * (period - 1) + gain[i]) / period
+        avg_loss[i] = (avg_loss[i - 1] * (period - 1) + loss[i]) / period
+    for i in range(period, n):
+        ag = avg_gain[i]
+        al = avg_loss[i]
+        if al == 0.0:
+            out[i] = 100.0 if ag > 0 else 50.0
+        else:
+            rs = ag / al
+            out[i] = 100.0 - (100.0 / (1.0 + rs))
+    return out
+
+
+def add_feature_rsi_orion_experiment(
+    data: pd.DataFrame,
+    period_list: list[int],
+    *,
+    column_name_fn: Callable[[int], str] | None = None,
+) -> pd.DataFrame:
+    """RSI columns matching ``experiments.orion.elib.add_feature_rsi`` (Wilder, period >= 2)."""
+    if not period_list:
+        return data
+    for p in period_list:
+        if p < 2:
+            raise ValueError("each RSI period must be >= 2")
+    name_fn = column_name_fn if column_name_fn is not None else (lambda n: f"rsi_{n}")
+    n_rows = len(data)
+    symbol = data.index.get_level_values("symbol")
+    columns = {name_fn(p): np.zeros(n_rows, dtype=np.float64) for p in period_list}
+
+    for _sym, group in data.groupby(symbol, sort=False):
+        group = group.sort_index(level="timestamp")
+        locs = group.index
+        base = _index_position(data, locs[0])
+        n = len(group)
+        close = group["close"].to_numpy(dtype=np.float64, copy=False)
+        for p in period_list:
+            rsi = _rsi_from_close_wilder(close, p)
+            columns[name_fn(p)][base : base + n] = rsi
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def symbols_in_reference_bars(reference_bars: pd.DataFrame) -> list[str]:
+    if len(reference_bars) == 0:
+        return []
+    u = pd.Index(reference_bars.index.get_level_values("symbol")).unique().sort_values()
+    return [str(x) for x in u]
+
+
+def add_feature_close_vs_reference_bars_pct_diff(
+    data: pd.DataFrame,
+    reference_bars: pd.DataFrame,
+    *,
+    column_name_fn: Callable[[str], str] | None = None,
+) -> pd.DataFrame:
+    reference_symbols = symbols_in_reference_bars(reference_bars)
+    if not reference_symbols:
+        return data
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda sym: f"close_vs_{sym}_pct_diff")
+    )
+
+    ts = data.index.get_level_values("timestamp")
+    close_main = data["close"].to_numpy(dtype=np.float64, copy=False)
+    columns: dict[str, np.ndarray] = {}
+
+    for sym in reference_symbols:
+        other_close = reference_bars.xs(sym, level="symbol")["close"].sort_index()
+        aligned = other_close.reindex(ts)
+        close_other = aligned.to_numpy(dtype=np.float64, copy=False)
+        columns[name_fn(sym)] = _pct_diff_vs_aligned_close(close_main, close_other)
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def add_feature_rsi_reference_bars(
+    data: pd.DataFrame,
+    reference_bars: pd.DataFrame,
+    period_list: list[int],
+    *,
+    column_name_fn: Callable[[str, int], str] | None = None,
+) -> pd.DataFrame:
+    reference_symbols = symbols_in_reference_bars(reference_bars)
+    if not reference_symbols or not period_list:
+        return data
+    for p in period_list:
+        if p < 2:
+            raise ValueError("each RSI period must be >= 2")
+    name_fn = (
+        column_name_fn
+        if column_name_fn is not None
+        else (lambda sym, period: f"rsi_{sym}_{period}")
+    )
+    n_rows = len(data)
+    ts = data.index.get_level_values("timestamp")
+    columns: dict[str, np.ndarray] = {}
+    for sym in reference_symbols:
+        for p in period_list:
+            columns[name_fn(sym, p)] = np.zeros(n_rows, dtype=np.float64)
+
+    for sym in reference_symbols:
+        ref_close = reference_bars.xs(sym, level="symbol")["close"].sort_index()
+        close_arr = ref_close.to_numpy(dtype=np.float64, copy=False)
+        for p in period_list:
+            rsi_arr = _rsi_from_close_wilder(close_arr, p)
+            rsi_series = pd.Series(rsi_arr, index=ref_close.index)
+            aligned = rsi_series.reindex(ts)
+            col = np.nan_to_num(
+                aligned.to_numpy(dtype=np.float64, copy=False),
+                nan=0.0,
+                posinf=0.0,
+                neginf=0.0,
+            )
+            columns[name_fn(sym, p)][:] = col
+
+    new_df = pd.DataFrame(columns, index=data.index)
+    return pd.concat([data, new_df], axis=1)
+
+
+def add_feature_close_bar_vwap_pct_diff(
+    data: pd.DataFrame,
+    *,
+    column_name: str = "close_vwap_pct_diff",
+) -> pd.DataFrame:
+    """``(close - vwap) / vwap`` using the bar's ``vwap`` column (orion experiment feature)."""
+    close = data["close"].to_numpy(dtype=np.float64, copy=False)
+    vwap = data["vwap"].to_numpy(dtype=np.float64, copy=False)
+    out = np.zeros(len(data), dtype=np.float64)
+    np.divide(close - vwap, vwap, out=out, where=vwap != 0)
+    data[column_name] = out
+    return data
+
+
+def create_orion_training_data(
+    data: pd.DataFrame,
+    take_profit: float,
+    stop_loss: float,
+    *,
+    reference_bars: pd.DataFrame | None = None,
+    max_bars_after_entry: int | None = None,
+    only_rows_hitting_tp_or_sl: bool = False,
+) -> pd.DataFrame:
+    """Build target + feature columns for the orion experiment schema (formerly in ``orion.elib``).
+
+    When ``only_rows_hitting_tp_or_sl`` is True, drop rows where neither take-profit nor
+    stop-loss would trade within the forward window (``add_range_target_column``).
+    """
+    col_names: list[str] = []
+    col_names.append("target")
+    data = create_target_column(
+        data,
+        take_profit=take_profit,
+        stop_loss=stop_loss,
+        column_name=col_names[-1],
+        max_bars_after_entry=max_bars_after_entry,
+    )
+    col_names.append("bars_until_close")
+    data = add_feature_bars_until_close(data, column_name=col_names[-1])
+    col_names.append("bars_since_open")
+    data = add_feature_bars_since_open(data, column_name=col_names[-1])
+    col_names.append("close_vwap_pct_diff")
+    data = add_feature_close_bar_vwap_pct_diff(data, column_name=col_names[-1])
+    rolling_windows = [1, 2, 5, 10, 20, 30, 60, 120]
+    rsi_rolling_windows = [7, 14, 28]
+    if reference_bars is not None:
+        ref_syms = symbols_in_reference_bars(reference_bars)
+        if ref_syms:
+            col_names.extend(f"close_vs_{s}_pct_diff" for s in ref_syms)
+            data = add_feature_close_vs_reference_bars_pct_diff(data, reference_bars)
+            col_names.extend(f"rsi_{s}_{b}" for s in ref_syms for b in rsi_rolling_windows)
+            data = add_feature_rsi_reference_bars(data, reference_bars, rsi_rolling_windows)
+    col_names.extend(f"atr_{b}" for b in rolling_windows)
+    data = add_feature_atr(data, rolling_windows)
+    col_names.append("day_of_week")
+    data = add_feature_day_of_week(data, column_name=col_names[-1])
+    col_names.extend(f"volume_zscore_{w}" for w in rolling_windows)
+    data = add_feature_volume_zscore_by_day(data, rolling_windows)
+    col_names.extend(f"pct_change_{b}" for b in rolling_windows)
+    data = add_feature_pct_change_batch(data, rolling_windows)
+    sma_rolling_windows = [9, 20, 50, 100]
+    col_names.extend(f"close_sma_{b}_pct_diff" for b in sma_rolling_windows)
+    data = add_feature_close_sma_pct_diff(data, sma_rolling_windows)
+    col_names.extend(f"rsi_{b}" for b in rsi_rolling_windows)
+    data = add_feature_rsi_orion_experiment(data, rsi_rolling_windows)
+    if only_rows_hitting_tp_or_sl:
+        tmp_col = "__tp_or_sl_touched"
+        add_range_target_column(
+            data,
+            take_profit,
+            stop_loss,
+            column_name=tmp_col,
+            max_bars_after_entry=max_bars_after_entry,
+        )
+        data = data.loc[data[tmp_col] == 1].drop(columns=[tmp_col])
+    return data[col_names].copy()

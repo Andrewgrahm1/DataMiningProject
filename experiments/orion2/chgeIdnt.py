@@ -40,7 +40,6 @@ from experiments.orion2.elib.elib import (
     zscore_feature_splits,
 )
 from lib.models import (
-    train_adaboost,
     train_decision_tree,
     train_forest,
     train_knn,
@@ -50,15 +49,11 @@ from lib.models import (
 )
 
 TARGET_COLUMN = "move_target"
-# ATR_PERIODS = (14, 21, 60, 90, 180)
 VOLUME_ROLL_WINDOWS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
-# Rolling VWAP bars within each session; large values (~390) approximate full-session VWAP.
 VWAP_WINDOWS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
 CLOSE_SMA_PERIODS = (1, 2, 5, 10, 20, 30, 60, 90, 180)
-CLOSE_EMA_SPANS = CLOSE_SMA_PERIODS
 BOLLINGER_PERIODS = CLOSE_SMA_PERIODS
 BOLLINGER_STD_MULTIPLES = (2.0,)
-RSI_PERIODS = (7, 14, 21)
 COLUMNS_EXCLUDED_FROM_ZSCORE: tuple[str, ...] = (TARGET_COLUMN,)
 
 
@@ -68,7 +63,6 @@ def training_column_names() -> list[str]:
         TARGET_COLUMN,
         "bars_until_close",
         "bars_since_open",
-        # *[f"atr_{p}" for p in ATR_PERIODS],
         *[f"volume_roll_mean_{w}" for w in VOLUME_ROLL_WINDOWS],
         *[f"typical_vwap_{w}_pct_diff" for w in VWAP_WINDOWS],
         *[f"close_sma_{p}_pct_diff" for p in CLOSE_SMA_PERIODS],
@@ -81,8 +75,6 @@ def training_column_names() -> list[str]:
                 f"close_bb_lower_{p}_{bollinger_std_column_tag(k)}_pct_diff",
             )
         ],
-        # *[f"close_ema_{p}_pct_diff" for p in CLOSE_EMA_SPANS],
-        # *[f"rsi_{p}" for p in RSI_PERIODS],
     ]
 
 
@@ -258,7 +250,7 @@ if __name__ == "__main__":
     SYMBOL = "TQQQ"
     START_DATE = datetime(2022, 1, 1)
     END_DATE = datetime(2025, 12, 31)
-    MOVE_PCT_THRESHOLD = 0.01
+    MOVE_PCT_THRESHOLD = 0.02
     MAX_FORWARD_BARS = 90
     VALIDATION_FRACTION = 0.15
     TEST_FRACTION = 0.2
@@ -395,8 +387,6 @@ if __name__ == "__main__":
     print_test_results("Neural network (MLP)", y_test, mlp_clf.predict(x_test))
 
     models: list[tuple[str, Any]] = [
-        # ("Decision tree", tree_clf),
-        # ("Naive Bayes", nb_clf),
         ("K-nearest neighbors", knn_clf),
         ("Random forest", forest_clf),
         ("XGBoost", xgb_clf),
