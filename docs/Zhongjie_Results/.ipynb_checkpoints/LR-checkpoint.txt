@@ -1,0 +1,55 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LogisticRegression with C=0.01, class_weight=None
+Training LogisticRegression with C=0.01, class_weight=balanced
+Training LogisticRegression with C=0.1, class_weight=None
+Training LogisticRegression with C=0.1, class_weight=balanced
+Training LogisticRegression with C=1.0, class_weight=None
+Training LogisticRegression with C=1.0, class_weight=balanced
+Training LogisticRegression with C=5.0, class_weight=None
+Training LogisticRegression with C=5.0, class_weight=balanced
+Training LogisticRegression with C=10.0, class_weight=None
+Training LogisticRegression with C=10.0, class_weight=balanced
+
+=== Top validation results (sorted) ===
+    C class_weight  threshold  validation_profit_pct  validation_trades  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  tp  fp   fn    tn
+ 0.10         None        0.7                 -136.8                 64                  1.562500               0.028727                93.946073   1  63 3480 54980
+ 1.00         None        0.7                 -301.4                137                  0.000000               0.000000                93.817921   0 137 3481 54906
+ 5.00         None        0.7                 -327.8                149                  0.000000               0.000000                93.797416   0 149 3481 54894
+10.00         None        0.7                 -330.0                150                  0.000000               0.000000                93.795708   0 150 3481 54893
+ 1.00         None        0.6                 -429.4                197                  0.507614               0.028727                93.718816   1 196 3480 54847
+ 0.10         None        0.6                 -437.8                239                  9.205021               0.632002                93.718816  22 217 3459 54826
+10.00         None        0.6                 -437.8                199                  0.000000               0.000000                93.711981   0 199 3481 54844
+ 5.00         None        0.6                 -442.2                201                  0.000000               0.000000                93.708564   0 201 3481 54842
+ 0.01         None        0.7                 -459.6                318                 18.867925               1.723643                93.713690  60 258 3421 54785
+ 1.00         None        0.5                 -707.4                427                 13.583138               1.666188                93.520607  58 369 3423 54674
+ 0.10         None        0.5                 -707.8                569                 23.901582               3.906923                93.544529 136 433 3345 54610
+10.00         None        0.5                 -711.2                416                 12.259615               1.465096                93.515481  51 365 3430 54678
+ 5.00         None        0.5                 -717.0                415                 11.807229               1.407641                93.510355  49 366 3432 54677
+ 0.01         None        0.6                 -850.6                803                 28.518057               6.578569                93.462511 229 574 3252 54469
+ 1.00         None        0.4                 -881.2                666                 21.921922               4.194197                93.412959 146 520 3335 54523
+
+Saved full validation table to logistic_regression_validation_results.csv
+
+Best validation setup:
+{'C': 0.1, 'class_weight': None}
+Best threshold: 0.7
+Best validation profit: -136.80%
+
+=== Final test result ===
+
+--- Logistic_Regression ---
+Profitable Trades Taken (Recall): 460/4,458 (10.32%)
+Win Rate (Precision): 460/1,308 (35.17%)
+Loss Rate: 848/1,308 (64.83%)
+True Positives: 460/4,458 (10.32%)
+True Negatives: 72,726 / 78,032 (93.20%)
+Accuracy: 73,186 / 78,032 (93.79%)
+Trades Taken: 1,308
+Realized Profit: -1,037.60%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -12.93%
+Win Rate - Break-even Gap: -19.83 pts

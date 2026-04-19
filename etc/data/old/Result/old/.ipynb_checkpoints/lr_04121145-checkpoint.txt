@@ -1,0 +1,31 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LogisticRegression with C=0.01, class_weight=None
+Training LogisticRegression with C=0.01, class_weight=balanced
+Training LogisticRegression with C=0.1, class_weight=None
+Training LogisticRegression with C=0.1, class_weight=balanced
+Training LogisticRegression with C=1.0, class_weight=None
+Training LogisticRegression with C=1.0, class_weight=balanced
+Training LogisticRegression with C=5.0, class_weight=None
+Training LogisticRegression with C=5.0, class_weight=balanced
+Training LogisticRegression with C=10.0, class_weight=None
+Training LogisticRegression with C=10.0, class_weight=balanced
+
+Best validation setup:
+{'C': 0.1, 'class_weight': None}
+Best threshold: 0.7
+Best validation profit: -136.80%
+
+--- Logistic_Regression ---
+Profitable Trades Taken (Recall): 460/4,458 (10.32%)
+Win Rate (Precision): 460/1,308 (35.17%)
+Loss Rate: 848/1,308 (64.83%)
+True Positives: 460/4,458 (10.32%)
+True Negatives: 72,726 / 78,032 (93.20%)
+Accuracy: 73,186 / 78,032 (93.79%)
+Trades Taken: 1,308
+Realized Profit: -1,037.60%
+Max Possible Profit: 8,024.40%
+Profit Capture vs Max Possible: -12.93%

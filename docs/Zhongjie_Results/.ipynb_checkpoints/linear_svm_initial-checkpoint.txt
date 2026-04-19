@@ -1,0 +1,53 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LinearSVC with C=0.01, class_weight=None
+Training LinearSVC with C=0.01, class_weight=balanced
+Training LinearSVC with C=0.1, class_weight=None
+Training LinearSVC with C=0.1, class_weight=balanced
+Training LinearSVC with C=1.0, class_weight=None
+Training LinearSVC with C=1.0, class_weight=balanced
+Training LinearSVC with C=5.0, class_weight=None
+Training LinearSVC with C=5.0, class_weight=balanced
+
+=== Top validation results (sorted) ===
+   C class_weight  threshold  validation_profit_pct  validation_trades  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  tp  fp   fn    tn
+0.01         None        0.5                    0.0                  0                  0.000000               0.000000                94.052013   0   0 3481 55043
+0.01         None        1.0                    0.0                  0                  0.000000               0.000000                94.052013   0   0 3481 55043
+0.10         None        1.0                    0.0                  0                  0.000000               0.000000                94.052013   0   0 3481 55043
+0.01         None        0.2                   -4.4                  2                  0.000000               0.000000                94.048595   0   2 3481 55041
+1.00         None        1.0                  -50.6                 23                  0.000000               0.000000                94.012713   0  23 3481 55020
+5.00         None        1.0                  -81.4                 37                  0.000000               0.000000                93.988791   0  37 3481 55006
+0.10         None        0.5                 -123.2                 56                  0.000000               0.000000                93.956326   0  56 3481 54987
+0.01         None        0.0                 -147.8                 69                  1.449275               0.028727                93.937530   1  68 3480 54975
+1.00         None        0.5                 -198.0                 90                  0.000000               0.000000                93.898230   0  90 3481 54953
+5.00         None        0.5                 -211.2                 96                  0.000000               0.000000                93.887978   0  96 3481 54947
+0.10         None        0.2                 -228.8                104                  0.000000               0.000000                93.874308   0 104 3481 54939
+1.00         None        0.2                 -261.8                119                  0.000000               0.000000                93.848677   0 119 3481 54924
+5.00         None        0.2                 -270.6                123                  0.000000               0.000000                93.841843   0 123 3481 54920
+0.10         None        0.0                 -345.4                157                  0.000000               0.000000                93.783747   0 157 3481 54886
+1.00         None        0.0                 -371.8                169                  0.000000               0.000000                93.763242   0 169 3481 54874
+
+Saved full validation table to linear_svm_validation_results.csv
+
+Best validation setup:
+{'C': 0.01, 'class_weight': None}
+Best threshold: 0.5
+Best validation profit: 0.00%
+
+=== Final test result ===
+
+--- Linear_SVM ---
+Profitable Trades Taken (Recall): 122/4,458 (2.74%)
+Win Rate (Precision): 122/228 (53.51%)
+Loss Rate: 106/228 (46.49%)
+True Positives: 122/4,458 (2.74%)
+True Negatives: 73,468 / 78,032 (94.15%)
+Accuracy: 73,590 / 78,032 (94.31%)
+Trades Taken: 228
+Realized Profit: -13.60%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.17%
+Win Rate - Break-even Gap: -1.49 pts

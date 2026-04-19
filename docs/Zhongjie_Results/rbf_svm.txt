@@ -1,0 +1,77 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training RBF SVC with C=0.1, gamma=scale, class_weight=None
+  threshold=-0.5, trades=0, validation_profit=0.00%
+  threshold=0.0, trades=0, validation_profit=0.00%
+  threshold=0.5, trades=0, validation_profit=0.00%
+Training RBF SVC with C=0.1, gamma=scale, class_weight=balanced
+  threshold=-0.5, trades=26702, validation_profit=-46752.40%
+  threshold=0.0, trades=16589, validation_profit=-26655.80%
+  threshold=0.5, trades=9931, validation_profit=-14428.20%
+Training RBF SVC with C=0.1, gamma=0.01, class_weight=None
+  threshold=-0.5, trades=0, validation_profit=0.00%
+  threshold=0.0, trades=0, validation_profit=0.00%
+  threshold=0.5, trades=0, validation_profit=0.00%
+Training RBF SVC with C=0.1, gamma=0.01, class_weight=balanced
+  threshold=-0.5, trades=32054, validation_profit=-58110.80%
+  threshold=0.0, trades=20807, validation_profit=-35143.40%
+  threshold=0.5, trades=12372, validation_profit=-18822.40%
+Training RBF SVC with C=1.0, gamma=scale, class_weight=None
+  threshold=-0.5, trades=2617, validation_profit=-3061.40%
+  threshold=0.0, trades=837, validation_profit=-881.40%
+  threshold=0.5, trades=194, validation_profit=-146.80%
+Training RBF SVC with C=1.0, gamma=scale, class_weight=balanced
+  threshold=-0.5, trades=17921, validation_profit=-30070.20%
+  threshold=0.0, trades=11596, validation_profit=-18151.20%
+  threshold=0.5, trades=7323, validation_profit=-10494.60%
+Training RBF SVC with C=1.0, gamma=0.01, class_weight=None
+  threshold=-0.5, trades=1154, validation_profit=-1238.80%
+  threshold=0.0, trades=180, validation_profit=-196.00%
+  threshold=0.5, trades=12, validation_profit=-22.40%
+Training RBF SVC with C=1.0, gamma=0.01, class_weight=balanced
+  threshold=-0.5, trades=21422, validation_profit=-36500.40%
+  threshold=0.0, trades=14193, validation_profit=-22496.60%
+  threshold=0.5, trades=9376, validation_profit=-13719.20%
+
+=== Top validation results (sorted) ===
+  C gamma class_weight  threshold  validation_profit_pct  validation_trades  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  validation_tp  validation_fp  validation_fn  validation_tn  test_profit_pct  test_trades  test_precision_pct  test_recall_pct  test_accuracy_pct  test_tp  test_fp  test_fn  test_tn
+0.1 scale         None       -0.5                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043            -11.8            9           22.222222         0.044863          94.280552        2        7     4456    73567
+0.1 scale         None        0.0                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043              0.0            0            0.000000         0.000000          94.286959        0        0     4458    73574
+0.1 scale         None        0.5                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043              0.0            0            0.000000         0.000000          94.286959        0        0     4458    73574
+0.1  0.01         None       -0.5                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043              0.0            0            0.000000         0.000000          94.286959        0        0     4458    73574
+0.1  0.01         None        0.0                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043              0.0            0            0.000000         0.000000          94.286959        0        0     4458    73574
+0.1  0.01         None        0.5                    0.0                  0                  0.000000               0.000000                94.052013              0              0           3481          55043              0.0            0            0.000000         0.000000          94.286959        0        0     4458    73574
+1.0  0.01         None        0.5                  -22.4                 12                  8.333333               0.028727                94.034926              1             11           3480          55032           -117.6          168           37.500000         1.413190          94.233135       63      105     4395    73469
+1.0 scale         None        0.5                 -146.8                194                 36.082474               2.010916                93.959743             70            124           3411          54919           -230.6          303           35.973597         2.445043          94.178030      109      194     4349    73380
+1.0  0.01         None        0.0                 -196.0                180                 27.777778               1.436369                93.915317             50            130           3431          54913           -497.6          608           34.539474         4.710633          94.046032      210      398     4248    73176
+1.0 scale         None        0.0                 -881.4                837                 28.673835               6.894571                93.442007            240            597           3241          54446           -912.6          993           32.024169         7.133244          93.829455      318      675     4140    72899
+1.0  0.01         None       -0.5                -1238.8               1154                 28.162912               9.336398                93.190828            325            829           3156          54214          -1809.6         1808           29.977876        12.157918          93.359135      542     1266     3916    72308
+1.0 scale         None       -0.5                -3061.4               2617                 25.754681              19.362252                91.883672            674           1943           2807          53100          -3544.6         3033           25.783053        17.541498          92.404398      782     2251     3676    71323
+1.0 scale     balanced        0.5               -10494.6               7323                 19.172470              40.333238                86.337229           1404           5919           2077          49124         -31424.8        18824           13.264981        56.011664          76.563461     2497    16327     1961    57247
+1.0  0.01     balanced        0.5               -13719.2               9376                 18.419369              49.612180                83.933087           1727           7649           1754          47394         -40171.4        24087           13.305933        71.893226          71.633432     3205    20882     1253    52692
+0.1 scale     balanced        0.5               -14428.2               9931                 18.678884              53.289285                83.422186           1855           8076           1626          46967         -34880.6        22213           15.743033        78.443248          74.783422     3497    18716      961    54858
+
+Saved full validation + test table to ././docs/Zhongjie_Results/rbf_svm_validation_results.csv
+
+Best validation setup:
+{'C': 0.1, 'gamma': 'scale', 'class_weight': None}
+Best threshold: -0.5
+Best validation profit: 0.00%
+
+=== Final test result ===
+
+--- Rbf_SVM ---
+Profitable Trades Taken (Recall): 2/4,458 (0.04%)
+Win Rate (Precision): 2/9 (22.22%)
+Loss Rate: 7/9 (77.78%)
+True Positives: 2/4,458 (0.04%)
+True Negatives: 73,567 / 78,032 (94.28%)
+Accuracy: 73,569 / 78,032 (94.28%)
+Trades Taken: 9
+Realized Profit: -11.80%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.15%
+Win Rate - Break-even Gap: -32.78 pts

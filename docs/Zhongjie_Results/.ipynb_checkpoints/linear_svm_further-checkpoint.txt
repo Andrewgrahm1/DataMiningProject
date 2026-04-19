@@ -1,0 +1,93 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LinearSVC with C=0.03
+  score range: min=-1.6381, median=-0.9562, max=0.4424
+  threshold=0.55, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.56, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.57, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.58, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.6, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.05
+  score range: min=-1.6739, median=-0.9625, max=0.6348
+  threshold=0.55, trades=20, validation_profit=-44.00%
+  threshold=0.56, trades=16, skipped (below min_validation_trades=20)
+  threshold=0.57, trades=14, skipped (below min_validation_trades=20)
+  threshold=0.58, trades=7, skipped (below min_validation_trades=20)
+  threshold=0.6, trades=3, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.07
+  score range: min=-1.6904, median=-0.9652, max=0.8002
+  threshold=0.55, trades=38, validation_profit=-83.60%
+  threshold=0.56, trades=37, validation_profit=-81.40%
+  threshold=0.57, trades=36, validation_profit=-79.20%
+  threshold=0.58, trades=34, validation_profit=-74.80%
+  threshold=0.6, trades=29, validation_profit=-63.80%
+Training LinearSVC with C=0.1
+  score range: min=-1.7016, median=-0.9676, max=0.9360
+  threshold=0.55, trades=50, validation_profit=-110.00%
+  threshold=0.56, trades=50, validation_profit=-110.00%
+  threshold=0.57, trades=49, validation_profit=-107.80%
+  threshold=0.58, trades=46, validation_profit=-101.20%
+  threshold=0.6, trades=45, validation_profit=-99.00%
+
+=== Top validation results (non-skipped) ===
+   C  threshold  score_min  score_median  score_max  skipped  validation_trades  validation_profit_pct  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  tp   fp     fn      tn
+0.05       0.55  -1.673857     -0.962460   0.634763    False                 20                  -44.0                       0.0                    0.0                94.017839 0.0 20.0 3481.0 55023.0
+0.07       0.60  -1.690370     -0.965164   0.800247    False                 29                  -63.8                       0.0                    0.0                94.002461 0.0 29.0 3481.0 55014.0
+0.07       0.58  -1.690370     -0.965164   0.800247    False                 34                  -74.8                       0.0                    0.0                93.993917 0.0 34.0 3481.0 55009.0
+0.07       0.57  -1.690370     -0.965164   0.800247    False                 36                  -79.2                       0.0                    0.0                93.990500 0.0 36.0 3481.0 55007.0
+0.07       0.56  -1.690370     -0.965164   0.800247    False                 37                  -81.4                       0.0                    0.0                93.988791 0.0 37.0 3481.0 55006.0
+0.07       0.55  -1.690370     -0.965164   0.800247    False                 38                  -83.6                       0.0                    0.0                93.987082 0.0 38.0 3481.0 55005.0
+0.10       0.60  -1.701565     -0.967571   0.935989    False                 45                  -99.0                       0.0                    0.0                93.975121 0.0 45.0 3481.0 54998.0
+0.10       0.58  -1.701565     -0.967571   0.935989    False                 46                 -101.2                       0.0                    0.0                93.973413 0.0 46.0 3481.0 54997.0
+0.10       0.57  -1.701565     -0.967571   0.935989    False                 49                 -107.8                       0.0                    0.0                93.968287 0.0 49.0 3481.0 54994.0
+0.10       0.55  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578 0.0 50.0 3481.0 54993.0
+0.10       0.56  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578 0.0 50.0 3481.0 54993.0
+
+=== All searched combinations ===
+   C  threshold  score_min  score_median  score_max  skipped  validation_trades  validation_profit_pct  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  tp   fp     fn      tn
+0.03       0.55  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.03       0.56  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.03       0.57  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.03       0.58  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.03       0.60  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.05       0.55  -1.673857     -0.962460   0.634763    False                 20                  -44.0                       0.0                    0.0                94.017839 0.0 20.0 3481.0 55023.0
+0.05       0.56  -1.673857     -0.962460   0.634763     True                 16                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.05       0.57  -1.673857     -0.962460   0.634763     True                 14                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.05       0.58  -1.673857     -0.962460   0.634763     True                  7                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.05       0.60  -1.673857     -0.962460   0.634763     True                  3                    NaN                       NaN                    NaN                      NaN NaN  NaN    NaN     NaN
+0.07       0.55  -1.690370     -0.965164   0.800247    False                 38                  -83.6                       0.0                    0.0                93.987082 0.0 38.0 3481.0 55005.0
+0.07       0.56  -1.690370     -0.965164   0.800247    False                 37                  -81.4                       0.0                    0.0                93.988791 0.0 37.0 3481.0 55006.0
+0.07       0.57  -1.690370     -0.965164   0.800247    False                 36                  -79.2                       0.0                    0.0                93.990500 0.0 36.0 3481.0 55007.0
+0.07       0.58  -1.690370     -0.965164   0.800247    False                 34                  -74.8                       0.0                    0.0                93.993917 0.0 34.0 3481.0 55009.0
+0.07       0.60  -1.690370     -0.965164   0.800247    False                 29                  -63.8                       0.0                    0.0                94.002461 0.0 29.0 3481.0 55014.0
+0.10       0.55  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578 0.0 50.0 3481.0 54993.0
+0.10       0.56  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578 0.0 50.0 3481.0 54993.0
+0.10       0.57  -1.701565     -0.967571   0.935989    False                 49                 -107.8                       0.0                    0.0                93.968287 0.0 49.0 3481.0 54994.0
+0.10       0.58  -1.701565     -0.967571   0.935989    False                 46                 -101.2                       0.0                    0.0                93.973413 0.0 46.0 3481.0 54997.0
+0.10       0.60  -1.701565     -0.967571   0.935989    False                 45                  -99.0                       0.0                    0.0                93.975121 0.0 45.0 3481.0 54998.0
+
+Saved full validation table to linear_svm_final_narrow_results.csv
+
+Best validation setup:
+{'C': 0.05}
+Best threshold: 0.55
+Best validation trades: 20
+Best validation profit: -44.00%
+
+=== Final test result ===
+
+--- Linear_SVM_final_narrow ---
+Profitable Trades Taken (Recall): 94/4,458 (2.11%)
+Win Rate (Precision): 94/173 (54.34%)
+Loss Rate: 79/173 (45.66%)
+True Positives: 94/4,458 (2.11%)
+True Negatives: 73,495 / 78,032 (94.19%)
+Accuracy: 73,589 / 78,032 (94.31%)
+Trades Taken: 173
+Realized Profit: -4.60%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.06%
+Win Rate - Break-even Gap: -0.66 pts

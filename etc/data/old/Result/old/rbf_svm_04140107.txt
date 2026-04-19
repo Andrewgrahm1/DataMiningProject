@@ -1,0 +1,55 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training RBF SVC with C=0.1, gamma=scale, class_weight=None
+  threshold=-0.5, trades=0, validation_profit=0.00%
+  threshold=0.0, trades=0, validation_profit=0.00%
+  threshold=0.5, trades=0, validation_profit=0.00%
+Training RBF SVC with C=0.1, gamma=scale, class_weight=balanced
+  threshold=-0.5, trades=26702, validation_profit=-46752.40%
+  threshold=0.0, trades=16589, validation_profit=-26655.80%
+  threshold=0.5, trades=9931, validation_profit=-14428.20%
+Training RBF SVC with C=0.1, gamma=0.01, class_weight=None
+  threshold=-0.5, trades=0, validation_profit=0.00%
+  threshold=0.0, trades=0, validation_profit=0.00%
+  threshold=0.5, trades=0, validation_profit=0.00%
+Training RBF SVC with C=0.1, gamma=0.01, class_weight=balanced
+  threshold=-0.5, trades=32054, validation_profit=-58110.80%
+  threshold=0.0, trades=20807, validation_profit=-35143.40%
+  threshold=0.5, trades=12372, validation_profit=-18822.40%
+Training RBF SVC with C=1.0, gamma=scale, class_weight=None
+  threshold=-0.5, trades=2617, validation_profit=-3061.40%
+  threshold=0.0, trades=837, validation_profit=-881.40%
+  threshold=0.5, trades=194, validation_profit=-146.80%
+Training RBF SVC with C=1.0, gamma=scale, class_weight=balanced
+  threshold=-0.5, trades=17921, validation_profit=-30070.20%
+  threshold=0.0, trades=11596, validation_profit=-18151.20%
+  threshold=0.5, trades=7323, validation_profit=-10494.60%
+Training RBF SVC with C=1.0, gamma=0.01, class_weight=None
+  threshold=-0.5, trades=1154, validation_profit=-1238.80%
+  threshold=0.0, trades=180, validation_profit=-196.00%
+  threshold=0.5, trades=12, validation_profit=-22.40%
+Training RBF SVC with C=1.0, gamma=0.01, class_weight=balanced
+  threshold=-0.5, trades=21422, validation_profit=-36500.40%
+  threshold=0.0, trades=14193, validation_profit=-22496.60%
+  threshold=0.5, trades=9376, validation_profit=-13719.20%
+
+Best validation setup:
+{'C': 0.1, 'gamma': 'scale', 'class_weight': None}
+Best threshold: -0.5
+Best validation profit: 0.00%
+
+--- Rbf_SVM ---
+Profitable Trades Taken (Recall): 2/4,458 (0.04%)
+Win Rate (Precision): 2/9 (22.22%)
+Loss Rate: 7/9 (77.78%)
+True Positives: 2/4,458 (0.04%)
+True Negatives: 73,567 / 78,032 (94.28%)
+Accuracy: 73,569 / 78,032 (94.28%)
+Trades Taken: 9
+Realized Profit: -11.80%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.15%
+Win Rate - Break-even Gap: -32.78 pts

@@ -1,0 +1,11 @@
+[FORMAT]
+max-line-length=120
+
+[DESIGN]
+max-args=10
+max-positional-arguments=10
+max-locals=25
+
+[MESSAGES CONTROL]
+# duplicate-code (R0801): lib.models.* sklearn/XGBoost wrappers share the same grid-search + refit skeleton.
+disable=too-few-public-methods,no-else-return,duplicate-code,too-many-locals

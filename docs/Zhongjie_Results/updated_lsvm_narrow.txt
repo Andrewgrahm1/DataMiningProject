@@ -1,0 +1,97 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LinearSVC with C=0.03
+  score range: min=-1.6381, median=-0.9562, max=0.4424
+  threshold=0.55, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.56, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.57, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.58, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.6, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.05
+  score range: min=-1.6739, median=-0.9625, max=0.6348
+  threshold=0.55, trades=20, validation_profit=-44.00%
+  threshold=0.56, trades=16, skipped (below min_validation_trades=20)
+  threshold=0.57, trades=14, skipped (below min_validation_trades=20)
+  threshold=0.58, trades=7, skipped (below min_validation_trades=20)
+  threshold=0.6, trades=3, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.07
+  score range: min=-1.6904, median=-0.9652, max=0.8002
+  threshold=0.55, trades=38, validation_profit=-83.60%
+  threshold=0.56, trades=37, validation_profit=-81.40%
+  threshold=0.57, trades=36, validation_profit=-79.20%
+  threshold=0.58, trades=34, validation_profit=-74.80%
+  threshold=0.6, trades=29, validation_profit=-63.80%
+Training LinearSVC with C=0.1
+  score range: min=-1.7016, median=-0.9676, max=0.9360
+  threshold=0.55, trades=50, validation_profit=-110.00%
+  threshold=0.56, trades=50, validation_profit=-110.00%
+  threshold=0.57, trades=49, validation_profit=-107.80%
+  threshold=0.58, trades=46, validation_profit=-101.20%
+  threshold=0.6, trades=45, validation_profit=-99.00%
+
+=== Top validation results (non-skipped) ===
+   C  threshold  score_min  score_median  score_max  skipped  validation_trades  validation_profit_pct  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  validation_tp  validation_fp  validation_fn  validation_tn  test_trades  test_profit_pct  test_precision_pct  test_recall_pct  test_accuracy_pct  test_tp  test_fp  test_fn  test_tn
+0.05       0.55  -1.673857     -0.962460   0.634763    False                 20                  -44.0                       0.0                    0.0                94.017839            0.0           20.0         3481.0        55023.0          173             -4.6           54.335260         2.108569          94.306182       94       79     4364    73495
+0.07       0.60  -1.690370     -0.965164   0.800247    False                 29                  -63.8                       0.0                    0.0                94.002461            0.0           29.0         3481.0        55014.0          126             -5.2           53.968254         1.525348          94.299774       68       58     4390    73516
+0.07       0.58  -1.690370     -0.965164   0.800247    False                 34                  -74.8                       0.0                    0.0                93.993917            0.0           34.0         3481.0        55009.0          142            -16.4           52.112676         1.659937          94.294648       74       68     4384    73506
+0.07       0.57  -1.690370     -0.965164   0.800247    False                 36                  -79.2                       0.0                    0.0                93.990500            0.0           36.0         3481.0        55007.0          155             -9.0           53.548387         1.861821          94.301056       83       72     4375    73502
+0.07       0.56  -1.690370     -0.965164   0.800247    False                 37                  -81.4                       0.0                    0.0                93.988791            0.0           37.0         3481.0        55006.0          165             -3.0           54.545455         2.018843          94.306182       90       75     4368    73499
+0.07       0.55  -1.690370     -0.965164   0.800247    False                 38                  -83.6                       0.0                    0.0                93.987082            0.0           38.0         3481.0        55005.0          174             -2.8           54.597701         2.131000          94.307464       95       79     4363    73495
+0.10       0.60  -1.701565     -0.967571   0.935989    False                 45                  -99.0                       0.0                    0.0                93.975121            0.0           45.0         3481.0        54998.0          127             -7.4           53.543307         1.525348          94.298493       68       59     4390    73515
+0.10       0.58  -1.701565     -0.967571   0.935989    False                 46                 -101.2                       0.0                    0.0                93.973413            0.0           46.0         3481.0        54997.0          146            -13.2           52.739726         1.727232          94.297211       77       69     4381    73505
+0.10       0.57  -1.701565     -0.967571   0.935989    False                 49                 -107.8                       0.0                    0.0                93.968287            0.0           49.0         3481.0        54994.0          157             -5.4           54.140127         1.906685          94.303619       85       72     4373    73502
+0.10       0.55  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578            0.0           50.0         3481.0        54993.0          172             -6.4           54.069767         2.086137          94.304901       93       79     4365    73495
+0.10       0.56  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578            0.0           50.0         3481.0        54993.0          167              0.6           55.089820         2.063706          94.308745       92       75     4366    73499
+
+=== Best observed test row ===
+   C threshold score_min score_median score_max skipped validation_trades validation_profit_pct validation_precision_pct validation_recall_pct validation_accuracy_pct validation_tp validation_fp validation_fn validation_tn test_trades test_profit_pct test_precision_pct test_recall_pct test_accuracy_pct test_tp test_fp test_fn test_tn
+ 0.1      0.56 -1.701565    -0.967571  0.935989   False                50                -110.0                      0.0                   0.0               93.966578           0.0          50.0        3481.0       54993.0         167             0.6           55.08982        2.063706         94.308745      92      75    4366   73499
+
+=== All searched combinations ===
+   C  threshold  score_min  score_median  score_max  skipped  validation_trades  validation_profit_pct  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  validation_tp  validation_fp  validation_fn  validation_tn  test_trades  test_profit_pct  test_precision_pct  test_recall_pct  test_accuracy_pct  test_tp  test_fp  test_fn  test_tn
+0.03       0.55  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          179             -1.8           54.748603         2.198295          94.308745       98       81     4360    73493
+0.03       0.56  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          165            -11.0           53.333333         1.973979          94.301056       88       77     4370    73497
+0.03       0.57  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          155            -17.0           52.258065         1.816958          94.295930       81       74     4377    73500
+0.03       0.58  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          146            -17.2           52.054795         1.704800          94.294648       76       70     4382    73504
+0.03       0.60  -1.638055     -0.956212   0.442371     True                  0                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          128            -13.6           52.343750         1.502916          94.294648       67       61     4391    73513
+0.05       0.55  -1.673857     -0.962460   0.634763    False                 20                  -44.0                       0.0                    0.0                94.017839            0.0           20.0         3481.0        55023.0          173             -4.6           54.335260         2.108569          94.306182       94       79     4364    73495
+0.05       0.56  -1.673857     -0.962460   0.634763     True                 16                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          162            -12.4           53.086420         1.929116          94.299774       86       76     4372    73498
+0.05       0.57  -1.673857     -0.962460   0.634763     True                 14                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          152            -14.4           52.631579         1.794527          94.297211       80       72     4378    73502
+0.05       0.58  -1.673857     -0.962460   0.634763     True                  7                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          144            -20.8           51.388889         1.659937          94.292085       74       70     4384    73504
+0.05       0.60  -1.673857     -0.962460   0.634763     True                  3                    NaN                       NaN                    NaN                      NaN            NaN            NaN            NaN            NaN          126             -5.2           53.968254         1.525348          94.299774       68       58     4390    73516
+0.07       0.55  -1.690370     -0.965164   0.800247    False                 38                  -83.6                       0.0                    0.0                93.987082            0.0           38.0         3481.0        55005.0          174             -2.8           54.597701         2.131000          94.307464       95       79     4363    73495
+0.07       0.56  -1.690370     -0.965164   0.800247    False                 37                  -81.4                       0.0                    0.0                93.988791            0.0           37.0         3481.0        55006.0          165             -3.0           54.545455         2.018843          94.306182       90       75     4368    73499
+0.07       0.57  -1.690370     -0.965164   0.800247    False                 36                  -79.2                       0.0                    0.0                93.990500            0.0           36.0         3481.0        55007.0          155             -9.0           53.548387         1.861821          94.301056       83       72     4375    73502
+0.07       0.58  -1.690370     -0.965164   0.800247    False                 34                  -74.8                       0.0                    0.0                93.993917            0.0           34.0         3481.0        55009.0          142            -16.4           52.112676         1.659937          94.294648       74       68     4384    73506
+0.07       0.60  -1.690370     -0.965164   0.800247    False                 29                  -63.8                       0.0                    0.0                94.002461            0.0           29.0         3481.0        55014.0          126             -5.2           53.968254         1.525348          94.299774       68       58     4390    73516
+0.10       0.55  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578            0.0           50.0         3481.0        54993.0          172             -6.4           54.069767         2.086137          94.304901       93       79     4365    73495
+0.10       0.56  -1.701565     -0.967571   0.935989    False                 50                 -110.0                       0.0                    0.0                93.966578            0.0           50.0         3481.0        54993.0          167              0.6           55.089820         2.063706          94.308745       92       75     4366    73499
+0.10       0.57  -1.701565     -0.967571   0.935989    False                 49                 -107.8                       0.0                    0.0                93.968287            0.0           49.0         3481.0        54994.0          157             -5.4           54.140127         1.906685          94.303619       85       72     4373    73502
+0.10       0.58  -1.701565     -0.967571   0.935989    False                 46                 -101.2                       0.0                    0.0                93.973413            0.0           46.0         3481.0        54997.0          146            -13.2           52.739726         1.727232          94.297211       77       69     4381    73505
+0.10       0.60  -1.701565     -0.967571   0.935989    False                 45                  -99.0                       0.0                    0.0                93.975121            0.0           45.0         3481.0        54998.0          127             -7.4           53.543307         1.525348          94.298493       68       59     4390    73515
+
+Saved full validation + test table to ././docs/Zhongjie_Results/linear_svm_final_narrow_results.csv
+
+Best validation-selected setup:
+{'C': 0.05}
+Best threshold: 0.55
+Best validation trades: 20
+Best validation profit: -44.00%
+
+=== Final test result for validation-selected setup ===
+
+--- Linear_SVM_final_narrow ---
+Profitable Trades Taken (Recall): 94/4,458 (2.11%)
+Win Rate (Precision): 94/173 (54.34%)
+Loss Rate: 79/173 (45.66%)
+True Positives: 94/4,458 (2.11%)
+True Negatives: 73,495 / 78,032 (94.19%)
+Accuracy: 73,589 / 78,032 (94.31%)
+Trades Taken: 173
+Realized Profit: -4.60%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.06%
+Win Rate - Break-even Gap: -0.66 pts

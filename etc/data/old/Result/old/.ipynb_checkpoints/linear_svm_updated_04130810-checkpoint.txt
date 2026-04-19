@@ -1,0 +1,64 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LinearSVC with C=0.001, class_weight=None
+  threshold=-0.2, trades=963, validation_profit=-1034.60%
+  threshold=-0.1, trades=437, validation_profit=-597.40%
+  threshold=0.0, trades=150, validation_profit=-302.00%
+  threshold=0.1, trades=60, validation_profit=-128.00%
+  threshold=0.2, trades=20, validation_profit=-44.00%
+  threshold=0.3, trades=3, skipped (below min_validation_trades=20)
+  threshold=0.4, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.005, class_weight=None
+  threshold=-0.2, trades=539, validation_profit=-661.80%
+  threshold=-0.1, trades=243, validation_profit=-418.60%
+  threshold=0.0, trades=78, validation_profit=-163.60%
+  threshold=0.1, trades=23, validation_profit=-50.60%
+  threshold=0.2, trades=4, skipped (below min_validation_trades=20)
+  threshold=0.3, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.4, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.01, class_weight=None
+  threshold=-0.2, trades=437, validation_profit=-585.40%
+  threshold=-0.1, trades=220, validation_profit=-412.00%
+  threshold=0.0, trades=69, validation_profit=-147.80%
+  threshold=0.1, trades=18, skipped (below min_validation_trades=20)
+  threshold=0.2, trades=2, skipped (below min_validation_trades=20)
+  threshold=0.3, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.4, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.02, class_weight=None
+  threshold=-0.2, trades=457, validation_profit=-701.40%
+  threshold=-0.1, trades=258, validation_profit=-511.60%
+  threshold=0.0, trades=103, validation_profit=-222.60%
+  threshold=0.1, trades=50, validation_profit=-110.00%
+  threshold=0.2, trades=14, skipped (below min_validation_trades=20)
+  threshold=0.3, trades=2, skipped (below min_validation_trades=20)
+  threshold=0.4, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.05, class_weight=None
+  threshold=-0.2, trades=464, validation_profit=-728.80%
+  threshold=-0.1, trades=270, validation_profit=-546.00%
+  threshold=0.0, trades=143, validation_profit=-314.60%
+  threshold=0.1, trades=107, validation_profit=-235.40%
+  threshold=0.2, trades=79, validation_profit=-173.80%
+  threshold=0.3, trades=56, validation_profit=-123.20%
+  threshold=0.4, trades=42, validation_profit=-92.40%
+
+Best validation setup:
+{'C': 0.001, 'class_weight': None}
+Best threshold: 0.2
+Best validation trades: 20
+Best validation profit: -44.00%
+
+--- Linear_SVM ---
+Profitable Trades Taken (Recall): 380/4,458 (8.52%)
+Win Rate (Precision): 380/969 (39.22%)
+Loss Rate: 589/969 (60.78%)
+True Positives: 380/4,458 (8.52%)
+True Negatives: 72,985 / 78,032 (93.53%)
+Accuracy: 73,365 / 78,032 (94.02%)
+Trades Taken: 969
+Realized Profit: -611.80%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -7.62%
+Win Rate - Break-even Gap: -15.78 pts

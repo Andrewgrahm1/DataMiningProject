@@ -1,0 +1,45 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training LinearSVC with C=0.01, class_weight=None
+  score range: min=-1.5348, median=-0.9351, max=0.2087
+  threshold=0.45, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.48, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.5, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.52, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.55, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.02, class_weight=None
+  score range: min=-1.6024, median=-0.9503, max=0.3086
+  threshold=0.45, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.48, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.5, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.52, trades=0, skipped (below min_validation_trades=20)
+  threshold=0.55, trades=0, skipped (below min_validation_trades=20)
+Training LinearSVC with C=0.05, class_weight=None
+  score range: min=-1.6739, median=-0.9625, max=0.6348
+  threshold=0.45, trades=34, validation_profit=-74.80%
+  threshold=0.48, trades=32, validation_profit=-70.40%
+  threshold=0.5, trades=27, validation_profit=-59.40%
+  threshold=0.52, trades=25, validation_profit=-55.00%
+  threshold=0.55, trades=20, validation_profit=-44.00%
+
+Best validation setup:
+{'C': 0.05, 'class_weight': None}
+Best threshold: 0.55
+Best validation trades: 20
+Best validation profit: -44.00%
+
+--- Linear_SVM ---
+Profitable Trades Taken (Recall): 94/4,458 (2.11%)
+Win Rate (Precision): 94/173 (54.34%)
+Loss Rate: 79/173 (45.66%)
+True Positives: 94/4,458 (2.11%)
+True Negatives: 73,495 / 78,032 (94.19%)
+Accuracy: 73,589 / 78,032 (94.31%)
+Trades Taken: 173
+Realized Profit: -4.60%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: -0.06%
+Win Rate - Break-even Gap: -0.66 pts

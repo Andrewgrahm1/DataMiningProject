@@ -1,0 +1,45 @@
+--- Train / validation / test split stats ---
+Train: 253,606 rows | 26,297 positive (10.37%) | 2022-01-03 → 2024-08-06 (2.59 years)
+Validation: 58,524 rows | 3,481 positive (5.95%) | 2024-08-06 → 2025-03-14 (0.60 years)
+Test: 78,032 rows | 4,458 positive (5.71%) | 2025-03-14 → 2025-12-30 (0.80 years)
+Training confirm LinearSVC with C=0.5
+Training confirm LinearSVC with C=1.0
+Training confirm LinearSVC with C=2.0
+
+=== Confirm run results ===
+  C  threshold  validation_profit_pct  validation_trades  validation_precision_pct  validation_recall_pct  validation_accuracy_pct  test_profit_pct  test_trades  test_precision_pct  test_recall_pct  test_accuracy_pct  test_tp  test_fp  test_fn  test_tn  eligible_for_selection
+0.5       0.45                 -204.6                 93                       0.0                    0.0                93.893104             -2.2          281           54.804270         3.454464          94.321560      154      127     4304    73447                    True
+0.5       0.50                 -187.0                 85                       0.0                    0.0                93.906773             29.0          225           58.222222         2.938537          94.334376      131       94     4327    73480                    True
+0.5       0.55                 -180.4                 82                       0.0                    0.0                93.911899              4.8          176           55.681818         2.198295          94.312590       98       78     4360    73496                    True
+1.0       0.45                 -211.2                 96                       0.0                    0.0                93.887978             -4.4          282           54.609929         3.454464          94.320279      154      128     4304    73446                    True
+1.0       0.50                 -198.0                 90                       0.0                    0.0                93.898230             28.6          227           58.149780         2.960969          94.334376      132       95     4326    73479                    True
+1.0       0.55                 -184.8                 84                       0.0                    0.0                93.908482              6.6          177           55.932203         2.220727          94.313871       99       78     4359    73496                    True
+2.0       0.45                 -224.4                102                       0.0                    0.0                93.877725             -8.8          284           54.225352         3.454464          94.317716      154      130     4304    73444                    True
+2.0       0.50                 -209.0                 95                       0.0                    0.0                93.889686             26.8          226           57.964602         2.938537          94.333094      131       95     4327    73479                    True
+2.0       0.55                 -193.6                 88                       0.0                    0.0                93.901647              8.0          180           56.111111         2.265590          94.315153      101       79     4357    73495                    True
+
+Saved confirm table to ././docs/Zhongjie_Results/linear_svm_c1_confirm_results.csv
+
+=== Best validation-selected setup ===
+{'C': 0.5, 'threshold': 0.55}
+Validation trades: 82
+Validation precision: 0.00%
+Validation recall: 0.00%
+Validation accuracy: 93.91%
+Validation profit: -180.40%
+
+=== Final test result for validation-selected setup ===
+
+--- Linear_SVM_c1_confirm ---
+Profitable Trades Taken (Recall): 98/4,458 (2.20%)
+Win Rate (Precision): 98/176 (55.68%)
+Loss Rate: 78/176 (44.32%)
+True Positives: 98/4,458 (2.20%)
+True Negatives: 73,496 / 78,032 (94.19%)
+Accuracy: 73,594 / 78,032 (94.31%)
+Trades Taken: 176
+Realized Profit: 4.80%
+Max Possible Profit: 8,024.40%
+Break-even Win Rate: 55.00%
+Profit Capture vs Max Possible: 0.06%
+Win Rate - Break-even Gap: 0.68 pts
