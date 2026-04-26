@@ -12,6 +12,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
 from lib.common.common import (
     add_feature_bars_since_open,
@@ -157,8 +161,79 @@ def train_GMM(
     gaussMix.fit(trainData)
     return gaussMix
 
+def train_tree(
+    trainXData: pd.DataFrame,
+    trainYData: pd.DataFrame,
+    **kwargs,
+) -> DecisionTreeClassifier:
+    """Fit a decision tree on features vs target. Returns the fitted classifier."""
+    if "class_weight" not in kwargs:
+        kwargs["class_weight"] = "balanced"
+    clf = DecisionTreeClassifier(random_state=42, **kwargs)
+    clf.fit(trainXData, trainYData)
+    return clf
+
+def train_forest(
+    trainXData: pd.DataFrame,
+    trainYData: pd.DataFrame,
+    **kwargs,
+) -> RandomForestClassifier:
+    """Fit a random forest on features vs target. Returns the fitted classifier."""
+    if "class_weight" not in kwargs:
+        kwargs["class_weight"] = "balanced"
+    clf = RandomForestClassifier(random_state=42, **kwargs)
+    clf.fit(trainXData, trainYData)
+    return clf
+
+def train_adaboost(
+    trainXData: pd.DataFrame,
+    trainYData: pd.DataFrame,
+    **kwargs,
+) -> AdaBoostClassifier:
+    """Fit an AdaBoost classifier on features vs target. Returns the fitted classifier.
+
+    Uses a shallow tree (max_depth=3) as base estimator with class_weight='balanced'
+    so the first weak learner is better than random and the ensemble can fit; a stump
+    (max_depth=1) can be worse than random on this task and cause AdaBoost to raise.
+    """
+    if "estimator" not in kwargs:
+        kwargs["estimator"] = DecisionTreeClassifier(
+            max_depth=3, random_state=42, class_weight="balanced"
+        )
+    clf = AdaBoostClassifier(random_state=42, **kwargs)
+    clf.fit(trainXData, trainYData)
+    return clf
+
+def train_knn(
+    trainXData: pd.DataFrame,
+    trainYData: pd.DataFrame,
+    **kwargs,
+) -> KNeighborsClassifier:
+    """Fit a K-Nearest Neighbors classifier on features vs target. Returns the fitted classifier."""
+    clf = KNeighborsClassifier(**kwargs)
+    clf.fit(trainXData, trainYData)
+    return clf
+
+def train_xgboost(
+    trainXData: pd.DataFrame,
+    trainYData: pd.DataFrame,
+    **kwargs,
+) -> XGBClassifier:
+    """Fit an XGBoost classifier on features vs target. Returns the fitted classifier.
+
+    When ``scale_pos_weight`` is omitted, sets it to n_negative / n_positive so
+    imbalance handling is analogous to ``class_weight='balanced'`` on sklearn trees.
+    """
+    if "scale_pos_weight" not in kwargs:
+        n_pos = int((trainYData == 1).sum())
+        if n_pos > 0:
+            kwargs["scale_pos_weight"] = int((trainYData == 0).sum()) / n_pos
+    clf = XGBClassifier(random_state=42, **kwargs)
+    clf.fit(trainXData, trainYData)
+    return clf
+
 if __name__ == "__main__":
-    SYMBOL = "SCHD"
+    SYMBOL = "MARA"
     START_DATE = datetime(2022, 1, 1)
     END_DATE = datetime(2025, 12, 31)
     TAKE_PROFIT = 0.04
@@ -232,5 +307,85 @@ if __name__ == "__main__":
     KMEANSGNBPreds = KMEANSGNBModel.predict(KMEANSXtest)
     evaluate_and_print(
         "K-Means w/ Gaussian Naive Bayes", y_test, KMEANSGNBPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # Decision Tree
+    DTGMMModel = train_tree(GGMXtrain, y_train)
+    KNNDTPreds = DTGMMModel.predict(GMMXtest)
+    evaluate_and_print(
+        "Gaussian Mixture w/ Decision Tree", y_test, KNNDTPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # Decision Tree
+    DTKMeansModel = train_tree(KMEANSXtrain, y_train)
+    DTKMeansPreds = DTKMeansModel.predict(KMEANSXtest)
+    evaluate_and_print(
+        "K-Means w/ Decision Tree", y_test, DTKMeansPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # K-Nearest Neighbors
+    KNNGMMModel = train_knn(GGMXtrain, y_train)
+    KNNGMMPreds = KNNGMMModel.predict(GMMXtest)
+    evaluate_and_print(
+        "Gaussian Mixture w/ K-Nearest Neighbors", y_test, KNNGMMPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # K-Nearest Neighbors
+    KNNKMeansModel = train_knn(KMEANSXtrain, y_train)
+    KNNKMeansPreds = KNNKMeansModel.predict(KMEANSXtest)
+    evaluate_and_print(
+        "K-Means w/ K-Nearest Neighbors", y_test, KNNKMeansPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # Random forest
+    RFGMMModel = train_forest(GGMXtrain, y_train)
+    RFGMMPreds = RFGMMModel.predict(GMMXtest)
+    evaluate_and_print(
+        "Gaussian Mixture w/ Random forest", y_test, RFGMMPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # Random forest
+    RFKMeansModel = train_forest(KMEANSXtrain, y_train)
+    RFKMeansPreds = RFKMeansModel.predict(KMEANSXtest)
+    evaluate_and_print(
+        "K-Means w/ Random forest", y_test, RFKMeansPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # AdaBoost
+    ADAGMMModel = train_adaboost(GGMXtrain, y_train)
+    ADAGMMPreds = ADAGMMModel.predict(GMMXtest)
+    evaluate_and_print(
+        "Gaussian Mixture w/ AdaBoost", y_test, ADAGMMPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # AdaBoost
+    ADAKMeansModel = train_adaboost(KMEANSXtrain, y_train)
+    ADAKMeansPreds = ADAKMeansModel.predict(KMEANSXtest)
+    evaluate_and_print(
+        "K-Means w/ AdaBoost", y_test, ADAKMeansPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # XGBoost
+    XGGMMModel = train_xgboost(GGMXtrain, y_train)
+    XGGMMPreds = XGGMMModel.predict(GMMXtest)
+    evaluate_and_print(
+        "Gaussian Mixture w/ XGBoost", y_test, XGGMMPreds,
+        take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
+    )
+
+    # XGBoost
+    XGKMeansModel = train_xgboost(KMEANSXtrain, y_train)
+    XGKMeansPreds = XGKMeansModel.predict(KMEANSXtest)
+    evaluate_and_print(
+        "K-Means w/ XGBoost", y_test, XGKMeansPreds,
         take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, cost=TRADE_COST,
     )

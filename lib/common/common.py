@@ -390,8 +390,8 @@ def evaluate_and_print(
     win_per = take_profit - cost
     loss_per = stop_loss + cost
     print(
-        f"Profit: {100 * (((tp_count + tn_count) * win_per) - ((fp_count + fn_count) * loss_per)):,.2f}% "
-        f"of max possible {100 * (pos_denom * win_per):,.2f}%"
+        f"Profit: {100 * ((tp_count * take_profit) - (fp_count * stop_loss) - ((tp_count + fp_count) * cost)):,.2f}% "
+        f"of max possible {100 * (pos_denom * take_profit):,.2f}%"
     )
 
 def calculate_min_win_rate(take_profit: float, stop_loss: float, cost: float) -> float:
